@@ -1,12 +1,11 @@
 ﻿using ExpenseTracker.Application.Interfaces;
+using ExpenseTracker.Application.Interfaces.Repositories;
 using ExpenseTracker.Persistence.Common;
 using ExpenseTracker.Persistence.Context;
+using ExpenseTracker.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace ExpenseTracker.Persistence
 {
@@ -19,6 +18,7 @@ namespace ExpenseTracker.Persistence
                     options.UseNpgsql(configuration.GetConnectionString("DefaultConnection")));
 
             services.AddScoped<IUnitOfWork, UnitOfWork>();
+            services.AddScoped<IUserRepository, UserRepository>();
 
             return services;
         }

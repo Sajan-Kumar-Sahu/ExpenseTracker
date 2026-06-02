@@ -1,4 +1,5 @@
 using ExpenseTracker.API.Exceptions;
+using ExpenseTracker.Application;
 using ExpenseTracker.Persistence;
 using Serilog;
 
@@ -19,6 +20,7 @@ builder.Host.UseSerilog((context, services, configuration) =>
 #region Services
 
 builder.Services.AddPersistence(builder.Configuration);
+builder.Services.AddApplication();
 
 builder.Services.AddControllers();
 
@@ -37,12 +39,18 @@ builder.Services
 
 var app = builder.Build();
 
-#region Middleware
-
 if (app.Environment.IsDevelopment())
 {
+    app.UseDeveloperExceptionPage();
+
     app.MapOpenApi();
+
+    app.UseSwaggerUI(options =>
+    {
+        options.SwaggerEndpoint("/openapi/v1.json", "Expense Tracker API");
+    });
 }
+#region Middleware
 
 app.UseExceptionHandler();
 
