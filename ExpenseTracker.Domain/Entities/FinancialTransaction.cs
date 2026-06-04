@@ -1,10 +1,7 @@
 ﻿using ExpenseTracker.Domain.Common;
-using ExpenseTracker.Domain.Entities;
-using System;
-using System.Collections.Generic;
-using System.Text;
+using ExpenseTracker.Domain.Enums;
 
-namespace ExpenseTracker.Domain.Enums
+namespace ExpenseTracker.Domain.Entities
 {
     public class FinancialTransaction : AuditableEntity
     {

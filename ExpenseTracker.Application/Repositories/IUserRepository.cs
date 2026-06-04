@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace ExpenseTracker.Application.Interfaces.Repositories
+namespace ExpenseTracker.Application.Repositories
 {
     public interface IUserRepository
     {

@@ -1,4 +1,4 @@
-using ExpenseTracker.Application.Interfaces.Repositories;
+using ExpenseTracker.Application.Repositories;
 using ExpenseTracker.Domain.Entities;
 using ExpenseTracker.Persistence.Context;
 using Microsoft.EntityFrameworkCore;

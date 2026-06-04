@@ -1,7 +1,7 @@
 using ExpenseTracker.Application.Common;
 using ExpenseTracker.Application.DTOs.User;
 using ExpenseTracker.Application.Interfaces;
-using ExpenseTracker.Application.Interfaces.Repositories;
+using ExpenseTracker.Application.Repositories;
 using ExpenseTracker.Domain.Entities;
 
 namespace ExpenseTracker.Application.Services
