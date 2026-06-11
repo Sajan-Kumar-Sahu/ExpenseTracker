@@ -14,7 +14,7 @@ namespace ExpenseTracker.Application.Interfaces
 
         Task<Result<List<AccountResponse>>> GetAllAsync();
 
-        Task<Result<AccountResponse>> UpdateAsync(Guid id, UpdateAccountRequest request);
+        Task<Result<AccountResponse>> UpdateAsync(UpdateAccountRequest request);
 
         Task<Result> DeleteAsync(Guid id);
     }

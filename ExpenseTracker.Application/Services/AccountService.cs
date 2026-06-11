@@ -76,14 +76,20 @@ namespace ExpenseTracker.Application.Services
                 .Success(accounts.Select(Map).ToList());
         }
 
-        public async Task<Result<AccountResponse>> UpdateAsync(
-            Guid id,
-            UpdateAccountRequest request)
+        public async Task<Result<AccountResponse>> UpdateAsync(UpdateAccountRequest request)
         {
-            var account = await _accountRepository.GetByIdAsync(id);
+            var account = await _accountRepository.GetByIdAsync(request.Id);
 
             if (account is null)
                 return Result<AccountResponse>.Failure("Account not found.");
+
+            var user = await _userRepository.GetByIdAsync(request.UserId);
+
+            if(user is null)
+                return Result<AccountResponse>.Failure("User not found.");
+
+            if (account.UserId != request.UserId)
+                return Result<AccountResponse>.Failure("Account does not belongs to this user.");
 
             account.Name = request.Name;
             account.Description = request.Description;

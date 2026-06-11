@@ -49,12 +49,11 @@ namespace ExpenseTracker.API.Controllers
             return Ok(result);
         }
 
-        [HttpPatch("{id:guid}")]
+        [HttpPatch]
         public async Task<IActionResult> Update(
-            Guid id,
             [FromBody] UpdateAccountRequest request)
         {
-            var result = await _accountService.UpdateAsync(id, request);
+            var result = await _accountService.UpdateAsync(request);
 
             if (!result.IsSuccess)
                 return NotFound(result);
