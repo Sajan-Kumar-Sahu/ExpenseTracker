@@ -20,6 +20,14 @@ namespace ExpenseTracker.Persistence.Repositories
                 .FirstOrDefaultAsync(x => x.Id == id);
         }
 
+        public async Task<User?> GetFirstAsync()
+        {
+            return await _context.Users
+                .AsNoTracking()
+                .OrderBy(u => u.CreatedAt)
+                .FirstOrDefaultAsync();
+        }
+
         public async Task<User?> GetByEmailAsync(string email)
         {
             return await _context.Users

@@ -9,6 +9,8 @@ namespace ExpenseTracker.Application.Repositories
     {
         Task<User?> GetByIdAsync(Guid id);
 
+        Task<User?> GetFirstAsync();
+
         Task<User?> GetByEmailAsync(string email);
 
         Task<List<User>> GetAllAsync();

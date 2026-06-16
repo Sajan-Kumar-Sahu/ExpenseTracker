@@ -11,6 +11,8 @@ namespace ExpenseTracker.Application.Repositories
 
         Task<List<Account>> GetAllAsync();
 
+        Task<List<Account>> GetByUserIdAsync(Guid userId);
+
         Task<bool> ExistsAsync(Guid userId, string accountName);
 
         Task AddAsync(Account account);
