@@ -1,5 +1,6 @@
 ﻿using ExpenseTracker.Application.DTOs.FinancialTransaction;
 using ExpenseTracker.Application.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -7,6 +8,7 @@ namespace ExpenseTracker.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class TransactionsController : ControllerBase
     {
         private readonly ITransactionService _transactionService;

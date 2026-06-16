@@ -1,7 +1,12 @@
 using ExpenseTracker.API.Exceptions;
 using ExpenseTracker.Application;
+using ExpenseTracker.Infrastructure;
 using ExpenseTracker.Persistence;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi;
 using Serilog;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,10 +26,70 @@ builder.Host.UseSerilog((context, services, configuration) =>
 
 builder.Services.AddPersistence(builder.Configuration);
 builder.Services.AddApplication();
+builder.Services.AddInfrastructure();
 
 builder.Services.AddControllers();
 
-builder.Services.AddOpenApi();
+#region Authentication
+
+var jwtSettings = builder.Configuration.GetSection("JwtSettings");
+var secretKey = jwtSettings["SecretKey"]!;
+
+builder.Services
+    .AddAuthentication(options =>
+    {
+        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    })
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = jwtSettings["Issuer"],
+            ValidAudience = jwtSettings["Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey)),
+            ClockSkew = TimeSpan.Zero
+        };
+    });
+
+builder.Services.AddAuthorization();
+
+#endregion
+
+#region Swagger
+
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "Expense Tracker API",
+        Version = "v1"
+    });
+
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "Bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "Enter your JWT access token (without the 'Bearer' prefix)."
+    });
+
+    options.AddSecurityRequirement(doc => new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecuritySchemeReference("Bearer", doc),
+            new List<string>()
+        }
+    });
+});
+
+#endregion
 
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
@@ -42,22 +107,25 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();
-    app.MapOpenApi();
+    app.UseSwagger();
     app.UseSwaggerUI(options =>
     {
-        options.SwaggerEndpoint("/openapi/v1.json", "Expense Tracker API");
+        options.SwaggerEndpoint("/swagger/v1/swagger.json", "Expense Tracker API v1");
     });
 }
+
 #region Middleware
 
 app.UseExceptionHandler();
 
 if (!app.Environment.IsDevelopment())
 {
-    app.UseHttpsRedirection(); // ← Only in production
+    app.UseHttpsRedirection();
 }
+
 app.UseSerilogRequestLogging();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 #endregion

@@ -1,10 +1,12 @@
 using ExpenseTracker.Application.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ExpenseTracker.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class DashboardController : ControllerBase
     {
         private readonly IDashboardService _dashboardService;

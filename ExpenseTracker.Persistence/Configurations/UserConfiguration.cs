@@ -20,8 +20,20 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .IsRequired()
             .HasMaxLength(255);
 
+        builder.Property(x => x.MobileNumber)
+            .IsRequired()
+            .HasMaxLength(20);
+
+        builder.Property(x => x.PasswordHash)
+            .IsRequired();
+
         builder.Property(x => x.IsActive)
             .HasDefaultValue(true);
+
+        builder.Property(x => x.RefreshToken)
+            .HasMaxLength(512);
+
+        builder.Property(x => x.RefreshTokenExpiry);
 
         builder.HasIndex(x => x.Email)
             .IsUnique();
