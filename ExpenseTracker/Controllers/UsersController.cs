@@ -1,11 +1,13 @@
 using ExpenseTracker.Application.DTOs.User;
 using ExpenseTracker.Application.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ExpenseTracker.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class UsersController : ControllerBase
     {
         private readonly IUserService _userService;
@@ -16,6 +18,7 @@ namespace ExpenseTracker.API.Controllers
         }
 
         [HttpPost]
+        [AllowAnonymous]
         public async Task<IActionResult> Create([FromBody] CreateUserRequest request)
         {
             var result = await _userService.CreateAsync(request);

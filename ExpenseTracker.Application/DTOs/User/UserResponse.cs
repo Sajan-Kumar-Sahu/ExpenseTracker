@@ -8,6 +8,8 @@
 
         public string Email { get; set; } = string.Empty;
 
+        public string MobileNumber { get; set; } = string.Empty;
+
         public DateTimeOffset CreatedAt { get; set; }
     }
 }

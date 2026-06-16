@@ -1,11 +1,13 @@
 ﻿using ExpenseTracker.Application.DTOs.Account;
 using ExpenseTracker.Application.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ExpenseTracker.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class AccountsController : ControllerBase
     {
         private readonly IAccountService _accountService;

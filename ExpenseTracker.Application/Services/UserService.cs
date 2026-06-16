@@ -1,3 +1,4 @@
+using BCrypt.Net;
 using ExpenseTracker.Application.Common;
 using ExpenseTracker.Application.DTOs.User;
 using ExpenseTracker.Application.Interfaces;
@@ -28,7 +29,9 @@ namespace ExpenseTracker.Application.Services
             {
                 Id = Guid.NewGuid(),
                 FullName = request.FullName,
-                Email = request.Email
+                Email = request.Email,
+                MobileNumber = request.MobileNumber,
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password)
             };
 
             await _userRepository.AddAsync(user);
@@ -63,6 +66,7 @@ namespace ExpenseTracker.Application.Services
 
             user.FullName = request.FullName;
             user.Email = request.Email;
+            user.MobileNumber = request.MobileNumber;
 
             await _userRepository.UpdateAsync(user);
             await _unitOfWork.SaveChangesAsync();
@@ -88,6 +92,7 @@ namespace ExpenseTracker.Application.Services
             Id = user.Id,
             FullName = user.FullName,
             Email = user.Email,
+            MobileNumber = user.MobileNumber,
             CreatedAt = user.CreatedAt
         };
     }
