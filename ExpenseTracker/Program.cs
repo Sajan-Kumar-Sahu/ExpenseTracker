@@ -113,14 +113,15 @@ using (var scope = app.Services.CreateScope())
     db.Database.Migrate();
 }
 
+app.UseSwagger();
+app.UseSwaggerUI(options =>
+{
+    options.SwaggerEndpoint("/swagger/v1/swagger.json", "Expense Tracker API v1");
+});
+
 if (app.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();
-    app.UseSwagger();
-    app.UseSwaggerUI(options =>
-    {
-        options.SwaggerEndpoint("/swagger/v1/swagger.json", "Expense Tracker API v1");
-    });
 }
 
 #region Middleware
