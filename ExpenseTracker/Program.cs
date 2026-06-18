@@ -33,7 +33,8 @@ builder.Services.AddControllers();
 #region Authentication
 
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
-var secretKey = jwtSettings["SecretKey"]!;
+var secretKey = builder.Configuration["JwtSettings:SecretKey"]
+    ?? throw new InvalidOperationException("JwtSettings:SecretKey is not configured.");
 
 builder.Services
     .AddAuthentication(options =>
