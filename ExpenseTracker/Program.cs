@@ -127,10 +127,6 @@ if (app.Environment.IsDevelopment())
 
 app.UseExceptionHandler();
 
-if (!app.Environment.IsDevelopment())
-{
-    app.UseHttpsRedirection();
-}
 
 app.UseSerilogRequestLogging();
 
