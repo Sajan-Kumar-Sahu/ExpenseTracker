@@ -1,0 +1,13 @@
+**/.git
+**/.gitignore
+**/.gitattributes
+**/.github
+**/bin
+**/obj
+**/Logs
+**/*.user
+**/*.suo
+**/.vs
+**/node_modules
+**/*.md
+**/appsettings.Development.json
