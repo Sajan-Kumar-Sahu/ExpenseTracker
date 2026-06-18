@@ -1,4 +1,5 @@
 using ExpenseTracker.API.Exceptions;
+using Microsoft.EntityFrameworkCore;
 using ExpenseTracker.Application;
 using ExpenseTracker.Infrastructure;
 using ExpenseTracker.Persistence;
