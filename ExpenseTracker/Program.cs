@@ -99,11 +99,18 @@ builder.Services.AddProblemDetails();
 builder.Services
     .AddHealthChecks()
     .AddNpgSql(
-        builder.Configuration.GetConnectionString("DefaultConnection")!);
+        builder.Configuration.GetConnectionString("DefaultConnection")!,
+        tags: ["ready"]);
 
 #endregion
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<ExpenseTracker.Persistence.Context.ExpenseTrackerDbContext>();
+    db.Database.Migrate();
+}
 
 if (app.Environment.IsDevelopment())
 {
@@ -136,6 +143,11 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.MapHealthChecks("/health");
+
+app.MapHealthChecks("/health/ready", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    Predicate = check => check.Tags.Contains("ready")
+});
 
 #endregion
 
