@@ -100,8 +100,7 @@ builder.Services.AddProblemDetails();
 builder.Services
     .AddHealthChecks()
     .AddNpgSql(
-        builder.Configuration.GetConnectionString("DefaultConnection")!,
-        tags: ["ready"]);
+        builder.Configuration.GetConnectionString("DefaultConnection")!);
 
 #endregion
 
