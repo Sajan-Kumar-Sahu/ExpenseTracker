@@ -141,6 +141,12 @@ app.MapControllers();
 
 app.MapHealthChecks("/health");
 
+app.MapGet("/ping", async (ExpenseTracker.Persistence.Context.ExpenseTrackerDbContext db) =>
+{
+    await db.Categories.AnyAsync();
+    return Results.Ok();
+}).AllowAnonymous();
+
 app.MapHealthChecks("/health/ready", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
 {
     Predicate = check => check.Tags.Contains("ready")
