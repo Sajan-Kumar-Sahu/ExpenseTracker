@@ -141,7 +141,7 @@ app.MapControllers();
 
 app.MapHealthChecks("/health");
 
-app.MapGet("/ping", async (ExpenseTracker.Persistence.Context.ExpenseTrackerDbContext db) =>
+app.MapMethods("/ping", ["GET", "HEAD"], async (ExpenseTracker.Persistence.Context.ExpenseTrackerDbContext db) =>
 {
     await db.Categories.AnyAsync();
     return Results.Ok();
