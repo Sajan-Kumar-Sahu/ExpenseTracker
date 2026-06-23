@@ -13,6 +13,8 @@ namespace ExpenseTracker.Application.Repositories
 
         Task<User?> GetByEmailAsync(string email);
 
+        Task<User?> GetByMobileNumberAsync(string mobileNumber);
+
         Task<User?> GetByRefreshTokenAsync(string refreshToken);
 
         Task<List<User>> GetAllAsync();

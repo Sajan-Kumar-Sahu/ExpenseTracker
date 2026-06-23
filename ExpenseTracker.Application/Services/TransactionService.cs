@@ -1,4 +1,5 @@
-﻿using ExpenseTracker.Application.Common;
+using ExpenseTracker.Application.Common;
+using ExpenseTracker.Application.DTOs.Common;
 using ExpenseTracker.Application.DTOs.FinancialTransaction;
 using ExpenseTracker.Application.Interfaces;
 using ExpenseTracker.Application.Repositories;
@@ -10,80 +11,69 @@ namespace ExpenseTracker.Application.Services
     public class TransactionService : ITransactionService
     {
         private readonly ITransactionRepository _transactionRepository;
-        private readonly IUserRepository _userRepository;
         private readonly IAccountRepository _accountRepository;
         private readonly ICategoryRepository _categoryRepository;
         private readonly IUnitOfWork _unitOfWork;
 
         public TransactionService(
             ITransactionRepository transactionRepository,
-            IUserRepository userRepository,
             IAccountRepository accountRepository,
             ICategoryRepository categoryRepository,
             IUnitOfWork unitOfWork)
         {
             _transactionRepository = transactionRepository;
-            _userRepository = userRepository;
             _accountRepository = accountRepository;
             _categoryRepository = categoryRepository;
             _unitOfWork = unitOfWork;
         }
 
-        public async Task<Result<TransactionResponse>> CreateAsync(
-            CreateTransactionRequest request)
+        public async Task<Result<TransactionResponse>> CreateAsync(Guid userId, CreateTransactionRequest request)
         {
-            var user = await _userRepository.GetByIdAsync(request.UserId);
-
-            if (user is null)
-                return Result<TransactionResponse>
-                    .Failure("User not found.");
-
-            var account = await _accountRepository
-                .GetByIdAsync(request.AccountId);
+            var account = await _accountRepository.GetByIdAsync(request.AccountId);
 
             if (account is null)
-                return Result<TransactionResponse>
-                    .Failure("Account not found.");
+                return Result<TransactionResponse>.Failure("Account not found.");
+
+            if (account.UserId != userId)
+                return Result<TransactionResponse>.Failure("Account does not belong to this user.");
 
             if (request.Amount <= 0)
-                return Result<TransactionResponse>
-                    .Failure("Amount must be greater than zero.");
+                return Result<TransactionResponse>.Failure("Amount must be greater than zero.");
 
             if (request.TransactionType == EntryType.Transfer)
             {
                 if (!request.TransferAccountId.HasValue)
-                    return Result<TransactionResponse>
-                        .Failure("Transfer account is required.");
+                    return Result<TransactionResponse>.Failure("Transfer account is required.");
 
                 if (request.TransferAccountId == request.AccountId)
-                    return Result<TransactionResponse>
-                        .Failure("Source and destination accounts cannot be the same.");
+                    return Result<TransactionResponse>.Failure("Source and destination accounts cannot be the same.");
 
-                var transferAccount = await _accountRepository
-                    .GetByIdAsync(request.TransferAccountId.Value);
+                var transferAccount = await _accountRepository.GetByIdAsync(request.TransferAccountId.Value);
 
                 if (transferAccount is null)
-                    return Result<TransactionResponse>
-                        .Failure("Transfer account not found.");
+                    return Result<TransactionResponse>.Failure("Transfer account not found.");
+
+                if (transferAccount.UserId != userId)
+                    return Result<TransactionResponse>.Failure("Transfer account does not belong to this user.");
             }
             else
             {
                 if (!request.CategoryId.HasValue)
-                    return Result<TransactionResponse>
-                        .Failure("Category is required.");
+                    return Result<TransactionResponse>.Failure("Category is required.");
 
-                var category = await _categoryRepository
-                    .GetByIdAsync(request.CategoryId.Value);
+                var category = await _categoryRepository.GetByIdAsync(request.CategoryId.Value);
 
                 if (category is null)
-                    return Result<TransactionResponse>
-                        .Failure("Category not found.");
+                    return Result<TransactionResponse>.Failure("Category not found.");
+
+                if (category.UserId != userId)
+                    return Result<TransactionResponse>.Failure("Category does not belong to this user.");
             }
 
             var transaction = new FinancialTransaction
             {
                 Id = Guid.NewGuid(),
-                UserId = request.UserId,
+                UserId = userId,
                 AccountId = request.AccountId,
                 TransferAccountId = request.TransferAccountId,
                 CategoryId = request.CategoryId,
@@ -97,80 +87,71 @@ namespace ExpenseTracker.Application.Services
             await _transactionRepository.AddAsync(transaction);
             await _unitOfWork.SaveChangesAsync();
 
-            return Result<TransactionResponse>.Success(
-                Map(transaction),
-                "Transaction created successfully.");
+            return Result<TransactionResponse>.Success(Map(transaction), "Transaction created successfully.");
         }
 
-        public async Task<Result<TransactionResponse>> GetByIdAsync(Guid id)
+        public async Task<Result<TransactionResponse>> GetByIdAsync(Guid id, Guid userId)
         {
-            var transaction = await _transactionRepository
-                .GetByIdAsync(id);
+            var transaction = await _transactionRepository.GetByIdAsync(id);
 
             if (transaction is null)
-                return Result<TransactionResponse>
-                    .Failure("Transaction not found.");
+                return Result<TransactionResponse>.Failure("Transaction not found.");
 
-            return Result<TransactionResponse>
-                .Success(Map(transaction));
+            if (transaction.UserId != userId)
+                return Result<TransactionResponse>.Failure("Access denied.");
+
+            return Result<TransactionResponse>.Success(Map(transaction));
         }
 
-        public async Task<Result<List<TransactionResponse>>> GetAllAsync()
+        public async Task<Result<PagedResult<TransactionResponse>>> GetAllByUserAsync(
+            Guid userId, PaginationRequest pagination)
         {
-            var transactions = await _transactionRepository
-                .GetAllAsync();
+            var (items, totalCount) = await _transactionRepository
+                .GetByUserIdPagedAsync(userId, pagination.Page, pagination.PageSize);
 
-            return Result<List<TransactionResponse>>
-                .Success(transactions.Select(Map).ToList());
-        }
-
-        public async Task<Result<List<TransactionResponse>>> GetByUserIdAsync(
-            Guid userId)
-        {
-            var transactions = await _transactionRepository
-                .GetByUserIdAsync(userId);
-
-            return Result<List<TransactionResponse>>
-                .Success(transactions.Select(Map).ToList());
+            return Result<PagedResult<TransactionResponse>>.Success(new PagedResult<TransactionResponse>
+            {
+                Items = items.Select(Map).ToList(),
+                TotalCount = totalCount,
+                Page = pagination.Page,
+                PageSize = pagination.PageSize
+            });
         }
 
         public async Task<Result<TransactionResponse>> UpdateAsync(
-            Guid id,
-            UpdateTransactionRequest request)
+            Guid id, Guid userId, UpdateTransactionRequest request)
         {
-            var transaction = await _transactionRepository
-                .GetByIdAsync(id);
+            var transaction = await _transactionRepository.GetByIdAsync(id);
 
             if (transaction is null)
-                return Result<TransactionResponse>
-                    .Failure("Transaction not found.");
+                return Result<TransactionResponse>.Failure("Transaction not found.");
 
-            var account = await _accountRepository
-                .GetByIdAsync(request.AccountId);
+            if (transaction.UserId != userId)
+                return Result<TransactionResponse>.Failure("Access denied.");
+
+            var account = await _accountRepository.GetByIdAsync(request.AccountId);
 
             if (account is null)
-                return Result<TransactionResponse>
-                    .Failure("Account not found.");
+                return Result<TransactionResponse>.Failure("Account not found.");
+
+            if (account.UserId != userId)
+                return Result<TransactionResponse>.Failure("Account does not belong to this user.");
 
             if (request.Amount <= 0)
-                return Result<TransactionResponse>
-                    .Failure("Amount must be greater than zero.");
+                return Result<TransactionResponse>.Failure("Amount must be greater than zero.");
 
             if (transaction.TransactionType == EntryType.Transfer)
             {
                 if (!request.TransferAccountId.HasValue)
-                    return Result<TransactionResponse>
-                        .Failure("Transfer account is required.");
+                    return Result<TransactionResponse>.Failure("Transfer account is required.");
 
                 if (request.TransferAccountId == request.AccountId)
-                    return Result<TransactionResponse>
-                        .Failure("Source and destination accounts cannot be the same.");
+                    return Result<TransactionResponse>.Failure("Source and destination accounts cannot be the same.");
             }
             else
             {
                 if (!request.CategoryId.HasValue)
-                    return Result<TransactionResponse>
-                        .Failure("Category is required.");
+                    return Result<TransactionResponse>.Failure("Category is required.");
             }
 
             transaction.AccountId = request.AccountId;
@@ -184,18 +165,18 @@ namespace ExpenseTracker.Application.Services
             await _transactionRepository.UpdateAsync(transaction);
             await _unitOfWork.SaveChangesAsync();
 
-            return Result<TransactionResponse>.Success(
-                Map(transaction),
-                "Transaction updated successfully.");
+            return Result<TransactionResponse>.Success(Map(transaction), "Transaction updated successfully.");
         }
 
-        public async Task<Result> DeleteAsync(Guid id)
+        public async Task<Result> DeleteAsync(Guid id, Guid userId)
         {
-            var transaction = await _transactionRepository
-                .GetByIdAsync(id);
+            var transaction = await _transactionRepository.GetByIdAsync(id);
 
             if (transaction is null)
                 return Result.Failure("Transaction not found.");
+
+            if (transaction.UserId != userId)
+                return Result.Failure("Access denied.");
 
             await _transactionRepository.DeleteAsync(transaction);
             await _unitOfWork.SaveChangesAsync();
@@ -203,23 +184,19 @@ namespace ExpenseTracker.Application.Services
             return Result.Success("Transaction deleted successfully.");
         }
 
-        private static TransactionResponse Map(
-            FinancialTransaction transaction)
+        private static TransactionResponse Map(FinancialTransaction transaction) => new()
         {
-            return new TransactionResponse
-            {
-                Id = transaction.Id,
-                UserId = transaction.UserId,
-                AccountId = transaction.AccountId,
-                TransferAccountId = transaction.TransferAccountId,
-                CategoryId = transaction.CategoryId,
-                TransactionType = transaction.TransactionType,
-                Amount = transaction.Amount,
-                TransactionDate = transaction.TransactionDate,
-                PaidTo = transaction.PaidTo,
-                Notes = transaction.Notes,
-                CreatedAt = transaction.CreatedAt
-            };
-        }
+            Id = transaction.Id,
+            UserId = transaction.UserId,
+            AccountId = transaction.AccountId,
+            TransferAccountId = transaction.TransferAccountId,
+            CategoryId = transaction.CategoryId,
+            TransactionType = transaction.TransactionType,
+            Amount = transaction.Amount,
+            TransactionDate = transaction.TransactionDate,
+            PaidTo = transaction.PaidTo,
+            Notes = transaction.Notes,
+            CreatedAt = transaction.CreatedAt
+        };
     }
 }

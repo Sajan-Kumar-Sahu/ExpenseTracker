@@ -7,7 +7,7 @@ namespace ExpenseTracker.API.Controllers
     [Route("api/[controller]")]
     [ApiController]
     [Authorize]
-    public class DashboardController : ControllerBase
+    public class DashboardController : BaseController
     {
         private readonly IDashboardService _dashboardService;
 
@@ -19,7 +19,10 @@ namespace ExpenseTracker.API.Controllers
         [HttpGet]
         public async Task<IActionResult> GetDashboard()
         {
-            var result = await _dashboardService.GetDashboardAsync();
+            var userId = GetCurrentUserId();
+            if (userId is null) return UnauthorizedUser();
+
+            var result = await _dashboardService.GetDashboardAsync(userId.Value);
 
             if (!result.IsSuccess)
                 return NotFound(result);

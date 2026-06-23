@@ -34,6 +34,12 @@ namespace ExpenseTracker.Persistence.Repositories
                 .FirstOrDefaultAsync(x => x.Email == email);
         }
 
+        public async Task<User?> GetByMobileNumberAsync(string mobileNumber)
+        {
+            return await _context.Users
+                .FirstOrDefaultAsync(x => x.MobileNumber == mobileNumber);
+        }
+
         public async Task<User?> GetByRefreshTokenAsync(string refreshToken)
         {
             return await _context.Users
