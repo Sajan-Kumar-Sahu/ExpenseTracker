@@ -1,4 +1,4 @@
-﻿using ExpenseTracker.Application.DTOs.Account;
+using ExpenseTracker.Application.DTOs.Account;
 using ExpenseTracker.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -8,7 +8,7 @@ namespace ExpenseTracker.API.Controllers
     [ApiController]
     [Route("api/[controller]")]
     [Authorize]
-    public class AccountsController : ControllerBase
+    public class AccountsController : BaseController
     {
         private readonly IAccountService _accountService;
 
@@ -18,24 +18,26 @@ namespace ExpenseTracker.API.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create(
-            [FromBody] CreateAccountRequest request)
+        public async Task<IActionResult> Create([FromBody] CreateAccountRequest request)
         {
-            var result = await _accountService.CreateAsync(request);
+            var userId = GetCurrentUserId();
+            if (userId is null) return UnauthorizedUser();
+
+            var result = await _accountService.CreateAsync(userId.Value, request);
 
             if (!result.IsSuccess)
                 return BadRequest(result);
 
-            return CreatedAtAction(
-                nameof(GetById),
-                new { id = result.Data!.Id },
-                result);
+            return CreatedAtAction(nameof(GetById), new { id = result.Data!.Id }, result);
         }
 
         [HttpGet("{id:guid}")]
         public async Task<IActionResult> GetById(Guid id)
         {
-            var result = await _accountService.GetByIdAsync(id);
+            var userId = GetCurrentUserId();
+            if (userId is null) return UnauthorizedUser();
+
+            var result = await _accountService.GetByIdAsync(id, userId.Value);
 
             if (!result.IsSuccess)
                 return NotFound(result);
@@ -46,16 +48,21 @@ namespace ExpenseTracker.API.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-            var result = await _accountService.GetAllAsync();
+            var userId = GetCurrentUserId();
+            if (userId is null) return UnauthorizedUser();
+
+            var result = await _accountService.GetAllByUserAsync(userId.Value);
 
             return Ok(result);
         }
 
         [HttpPatch]
-        public async Task<IActionResult> Update(
-            [FromBody] UpdateAccountRequest request)
+        public async Task<IActionResult> Update([FromBody] UpdateAccountRequest request)
         {
-            var result = await _accountService.UpdateAsync(request);
+            var userId = GetCurrentUserId();
+            if (userId is null) return UnauthorizedUser();
+
+            var result = await _accountService.UpdateAsync(userId.Value, request);
 
             if (!result.IsSuccess)
                 return NotFound(result);
@@ -66,7 +73,10 @@ namespace ExpenseTracker.API.Controllers
         [HttpDelete("{id:guid}")]
         public async Task<IActionResult> Delete(Guid id)
         {
-            var result = await _accountService.DeleteAsync(id);
+            var userId = GetCurrentUserId();
+            if (userId is null) return UnauthorizedUser();
+
+            var result = await _accountService.DeleteAsync(id, userId.Value);
 
             if (!result.IsSuccess)
                 return NotFound(result);

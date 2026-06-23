@@ -1,14 +1,9 @@
-﻿using ExpenseTracker.Domain.Enums;
-using System;
-using System.Collections.Generic;
-using System.Text;
+using ExpenseTracker.Domain.Enums;
 
 namespace ExpenseTracker.Application.DTOs.FinancialTransaction
 {
     public class CreateTransactionRequest
     {
-        public Guid UserId { get; set; }
-
         public Guid AccountId { get; set; }
 
         public Guid? TransferAccountId { get; set; }

@@ -1,25 +1,18 @@
-﻿using ExpenseTracker.Application.Common;
+using ExpenseTracker.Application.Common;
 using ExpenseTracker.Application.DTOs.Category;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace ExpenseTracker.Application.Interfaces
 {
     public interface ICategoryService
     {
-        Task<Result<CategoryResponse>> CreateAsync(CreateCategoryRequest request);
+        Task<Result<CategoryResponse>> CreateAsync(Guid userId, CreateCategoryRequest request);
 
-        Task<Result<CategoryResponse>> GetByIdAsync(Guid id);
+        Task<Result<CategoryResponse>> GetByIdAsync(Guid id, Guid userId);
 
-        Task<Result<List<CategoryResponse>>> GetAllAsync();
+        Task<Result<List<CategoryResponse>>> GetAllByUserAsync(Guid userId);
 
-        Task<Result<List<CategoryResponse>>> GetByUserIdAsync(Guid userId);
+        Task<Result<CategoryResponse>> UpdateAsync(Guid id, Guid userId, UpdateCategoryRequest request);
 
-        Task<Result<CategoryResponse>> UpdateAsync(
-            Guid id,
-            UpdateCategoryRequest request);
-
-        Task<Result> DeleteAsync(Guid id);
+        Task<Result> DeleteAsync(Guid id, Guid userId);
     }
 }

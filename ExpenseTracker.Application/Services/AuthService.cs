@@ -30,10 +30,10 @@ namespace ExpenseTracker.Application.Services
 
         public async Task<Result<AuthResponse>> LoginAsync(LoginRequest request)
         {
-            var user = await _userRepository.GetByEmailAsync(request.Email);
+            var user = await _userRepository.GetByMobileNumberAsync(request.MobileNumber);
 
             if (user is null || !BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
-                return Result<AuthResponse>.Failure("Invalid email or password.");
+                return Result<AuthResponse>.Failure("Invalid mobile number or password.");
 
             if (!user.IsActive)
                 return Result<AuthResponse>.Failure("Account is inactive.");

@@ -1,10 +1,7 @@
-﻿using ExpenseTracker.Application.Repositories;
+using ExpenseTracker.Application.Repositories;
 using ExpenseTracker.Domain.Entities;
 using ExpenseTracker.Persistence.Context;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace ExpenseTracker.Persistence.Repositories
 {
@@ -12,8 +9,7 @@ namespace ExpenseTracker.Persistence.Repositories
     {
         private readonly ExpenseTrackerDbContext _context;
 
-        public TransactionRepository(
-            ExpenseTrackerDbContext context)
+        public TransactionRepository(ExpenseTrackerDbContext context)
         {
             _context = context;
         }
@@ -43,10 +39,26 @@ namespace ExpenseTracker.Persistence.Repositories
                 .ToListAsync();
         }
 
+        public async Task<(List<FinancialTransaction> Items, int TotalCount)> GetByUserIdPagedAsync(
+            Guid userId, int page, int pageSize)
+        {
+            var query = _context.FinancialTransactions
+                .Where(t => t.UserId == userId)
+                .AsNoTracking()
+                .OrderByDescending(t => t.TransactionDate);
+
+            var totalCount = await query.CountAsync();
+            var items = await query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return (items, totalCount);
+        }
+
         public async Task AddAsync(FinancialTransaction transaction)
         {
-            await _context.FinancialTransactions
-                .AddAsync(transaction);
+            await _context.FinancialTransactions.AddAsync(transaction);
         }
 
         public Task UpdateAsync(FinancialTransaction transaction)

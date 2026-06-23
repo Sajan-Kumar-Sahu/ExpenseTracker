@@ -1,48 +1,35 @@
-﻿using ExpenseTracker.Application.Common;
+using ExpenseTracker.Application.Common;
 using ExpenseTracker.Application.DTOs.Account;
 using ExpenseTracker.Application.Interfaces;
 using ExpenseTracker.Application.Repositories;
 using ExpenseTracker.Domain.Entities;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace ExpenseTracker.Application.Services
 {
     public class AccountService : IAccountService
     {
         private readonly IAccountRepository _accountRepository;
-        private readonly IUserRepository _userRepository;
         private readonly IUnitOfWork _unitOfWork;
 
         public AccountService(
             IAccountRepository accountRepository,
-            IUserRepository userRepository,
             IUnitOfWork unitOfWork)
         {
             _accountRepository = accountRepository;
-            _userRepository = userRepository;
             _unitOfWork = unitOfWork;
         }
 
-        public async Task<Result<AccountResponse>> CreateAsync(CreateAccountRequest request)
+        public async Task<Result<AccountResponse>> CreateAsync(Guid userId, CreateAccountRequest request)
         {
-            var user = await _userRepository.GetByIdAsync(request.UserId);
-
-            if (user is null)
-                return Result<AccountResponse>.Failure("User not found.");
-
-            var accountExists = await _accountRepository
-                .ExistsAsync(request.UserId, request.Name);
+            var accountExists = await _accountRepository.ExistsAsync(userId, request.Name);
 
             if (accountExists)
-                return Result<AccountResponse>.Failure(
-                    "An account with this name already exists.");
+                return Result<AccountResponse>.Failure("An account with this name already exists.");
 
             var account = new Account
             {
                 Id = Guid.NewGuid(),
-                UserId = request.UserId,
+                UserId = userId,
                 Name = request.Name,
                 Description = request.Description,
                 OpeningBalance = request.OpeningBalance,
@@ -53,43 +40,38 @@ namespace ExpenseTracker.Application.Services
             await _accountRepository.AddAsync(account);
             await _unitOfWork.SaveChangesAsync();
 
-            return Result<AccountResponse>.Success(
-                Map(account),
-                "Account created successfully.");
+            return Result<AccountResponse>.Success(Map(account), "Account created successfully.");
         }
 
-        public async Task<Result<AccountResponse>> GetByIdAsync(Guid id)
+        public async Task<Result<AccountResponse>> GetByIdAsync(Guid id, Guid userId)
         {
             var account = await _accountRepository.GetByIdAsync(id);
 
             if (account is null)
                 return Result<AccountResponse>.Failure("Account not found.");
 
+            if (account.UserId != userId)
+                return Result<AccountResponse>.Failure("Access denied.");
+
             return Result<AccountResponse>.Success(Map(account));
         }
 
-        public async Task<Result<List<AccountResponse>>> GetAllAsync()
+        public async Task<Result<List<AccountResponse>>> GetAllByUserAsync(Guid userId)
         {
-            var accounts = await _accountRepository.GetAllAsync();
+            var accounts = await _accountRepository.GetByUserIdAsync(userId);
 
-            return Result<List<AccountResponse>>
-                .Success(accounts.Select(Map).ToList());
+            return Result<List<AccountResponse>>.Success(accounts.Select(Map).ToList());
         }
 
-        public async Task<Result<AccountResponse>> UpdateAsync(UpdateAccountRequest request)
+        public async Task<Result<AccountResponse>> UpdateAsync(Guid userId, UpdateAccountRequest request)
         {
             var account = await _accountRepository.GetByIdAsync(request.Id);
 
             if (account is null)
                 return Result<AccountResponse>.Failure("Account not found.");
 
-            var user = await _userRepository.GetByIdAsync(request.UserId);
-
-            if(user is null)
-                return Result<AccountResponse>.Failure("User not found.");
-
-            if (account.UserId != request.UserId)
-                return Result<AccountResponse>.Failure("Account does not belongs to this user.");
+            if (account.UserId != userId)
+                return Result<AccountResponse>.Failure("Access denied.");
 
             account.Name = request.Name;
             account.Description = request.Description;
@@ -99,17 +81,18 @@ namespace ExpenseTracker.Application.Services
             await _accountRepository.UpdateAsync(account);
             await _unitOfWork.SaveChangesAsync();
 
-            return Result<AccountResponse>.Success(
-                Map(account),
-                "Account updated successfully.");
+            return Result<AccountResponse>.Success(Map(account), "Account updated successfully.");
         }
 
-        public async Task<Result> DeleteAsync(Guid id)
+        public async Task<Result> DeleteAsync(Guid id, Guid userId)
         {
             var account = await _accountRepository.GetByIdAsync(id);
 
             if (account is null)
                 return Result.Failure("Account not found.");
+
+            if (account.UserId != userId)
+                return Result.Failure("Access denied.");
 
             await _accountRepository.DeleteAsync(account);
             await _unitOfWork.SaveChangesAsync();
@@ -117,19 +100,16 @@ namespace ExpenseTracker.Application.Services
             return Result.Success("Account deleted successfully.");
         }
 
-        private static AccountResponse Map(Account account)
+        private static AccountResponse Map(Account account) => new()
         {
-            return new AccountResponse
-            {
-                Id = account.Id,
-                UserId = account.UserId,
-                Name = account.Name,
-                Description = account.Description,
-                OpeningBalance = account.OpeningBalance,
-                IsActive = account.IsActive,
-                AccountType = account.AccountType,
-                CreatedAt = account.CreatedAt
-            };
-        }
+            Id = account.Id,
+            UserId = account.UserId,
+            Name = account.Name,
+            Description = account.Description,
+            OpeningBalance = account.OpeningBalance,
+            IsActive = account.IsActive,
+            AccountType = account.AccountType,
+            CreatedAt = account.CreatedAt
+        };
     }
 }

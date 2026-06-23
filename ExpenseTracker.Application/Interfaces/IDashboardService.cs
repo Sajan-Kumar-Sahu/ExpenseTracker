@@ -5,6 +5,6 @@ namespace ExpenseTracker.Application.Interfaces
 {
     public interface IDashboardService
     {
-        Task<Result<DashboardResponse>> GetDashboardAsync();
+        Task<Result<DashboardResponse>> GetDashboardAsync(Guid userId);
     }
 }

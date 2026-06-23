@@ -1,7 +1,4 @@
-﻿using ExpenseTracker.Domain.Entities;
-using System;
-using System.Collections.Generic;
-using System.Text;
+using ExpenseTracker.Domain.Entities;
 
 namespace ExpenseTracker.Application.Repositories
 {
@@ -12,6 +9,9 @@ namespace ExpenseTracker.Application.Repositories
         Task<List<FinancialTransaction>> GetAllAsync();
 
         Task<List<FinancialTransaction>> GetByUserIdAsync(Guid userId);
+
+        Task<(List<FinancialTransaction> Items, int TotalCount)> GetByUserIdPagedAsync(
+            Guid userId, int page, int pageSize);
 
         Task AddAsync(FinancialTransaction transaction);
 

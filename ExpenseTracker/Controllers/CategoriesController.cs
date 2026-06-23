@@ -1,7 +1,6 @@
-﻿using ExpenseTracker.Application.DTOs.Category;
+using ExpenseTracker.Application.DTOs.Category;
 using ExpenseTracker.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ExpenseTracker.API.Controllers
@@ -9,7 +8,7 @@ namespace ExpenseTracker.API.Controllers
     [Route("api/[controller]")]
     [ApiController]
     [Authorize]
-    public class CategoriesController : ControllerBase
+    public class CategoriesController : BaseController
     {
         private readonly ICategoryService _categoryService;
 
@@ -19,24 +18,26 @@ namespace ExpenseTracker.API.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create(
-            [FromBody] CreateCategoryRequest request)
+        public async Task<IActionResult> Create([FromBody] CreateCategoryRequest request)
         {
-            var result = await _categoryService.CreateAsync(request);
+            var userId = GetCurrentUserId();
+            if (userId is null) return UnauthorizedUser();
+
+            var result = await _categoryService.CreateAsync(userId.Value, request);
 
             if (!result.IsSuccess)
                 return BadRequest(result);
 
-            return CreatedAtAction(
-                nameof(GetById),
-                new { id = result.Data!.Id },
-                result);
+            return CreatedAtAction(nameof(GetById), new { id = result.Data!.Id }, result);
         }
 
         [HttpGet("{id:guid}")]
         public async Task<IActionResult> GetById(Guid id)
         {
-            var result = await _categoryService.GetByIdAsync(id);
+            var userId = GetCurrentUserId();
+            if (userId is null) return UnauthorizedUser();
+
+            var result = await _categoryService.GetByIdAsync(id, userId.Value);
 
             if (!result.IsSuccess)
                 return NotFound(result);
@@ -47,21 +48,19 @@ namespace ExpenseTracker.API.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-            return Ok(await _categoryService.GetAllAsync());
-        }
+            var userId = GetCurrentUserId();
+            if (userId is null) return UnauthorizedUser();
 
-        [HttpGet("user/{userId:guid}")]
-        public async Task<IActionResult> GetByUserId(Guid userId)
-        {
-            return Ok(await _categoryService.GetByUserIdAsync(userId));
+            return Ok(await _categoryService.GetAllByUserAsync(userId.Value));
         }
 
         [HttpPatch("{id:guid}")]
-        public async Task<IActionResult> Update(
-            Guid id,
-            [FromBody] UpdateCategoryRequest request)
+        public async Task<IActionResult> Update(Guid id, [FromBody] UpdateCategoryRequest request)
         {
-            var result = await _categoryService.UpdateAsync(id, request);
+            var userId = GetCurrentUserId();
+            if (userId is null) return UnauthorizedUser();
+
+            var result = await _categoryService.UpdateAsync(id, userId.Value, request);
 
             if (!result.IsSuccess)
                 return NotFound(result);
@@ -72,7 +71,10 @@ namespace ExpenseTracker.API.Controllers
         [HttpDelete("{id:guid}")]
         public async Task<IActionResult> Delete(Guid id)
         {
-            var result = await _categoryService.DeleteAsync(id);
+            var userId = GetCurrentUserId();
+            if (userId is null) return UnauthorizedUser();
+
+            var result = await _categoryService.DeleteAsync(id, userId.Value);
 
             if (!result.IsSuccess)
                 return NotFound(result);

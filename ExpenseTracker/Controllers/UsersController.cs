@@ -8,7 +8,7 @@ namespace ExpenseTracker.API.Controllers
     [ApiController]
     [Route("api/[controller]")]
     [Authorize]
-    public class UsersController : ControllerBase
+    public class UsersController : BaseController
     {
         private readonly IUserService _userService;
 
@@ -32,6 +32,12 @@ namespace ExpenseTracker.API.Controllers
         [HttpGet("{id:guid}")]
         public async Task<IActionResult> GetById(Guid id)
         {
+            var userId = GetCurrentUserId();
+            if (userId is null) return UnauthorizedUser();
+
+            if (id != userId.Value)
+                return Forbid();
+
             var result = await _userService.GetByIdAsync(id);
 
             if (!result.IsSuccess)
@@ -40,10 +46,16 @@ namespace ExpenseTracker.API.Controllers
             return Ok(result);
         }
 
-        [HttpGet]
-        public async Task<IActionResult> GetAll()
+        [HttpGet("me")]
+        public async Task<IActionResult> GetMe()
         {
-            var result = await _userService.GetAllAsync();
+            var userId = GetCurrentUserId();
+            if (userId is null) return UnauthorizedUser();
+
+            var result = await _userService.GetByIdAsync(userId.Value);
+
+            if (!result.IsSuccess)
+                return NotFound(result);
 
             return Ok(result);
         }
@@ -51,6 +63,12 @@ namespace ExpenseTracker.API.Controllers
         [HttpPatch("{id:guid}")]
         public async Task<IActionResult> Update(Guid id, [FromBody] UpdateUserRequest request)
         {
+            var userId = GetCurrentUserId();
+            if (userId is null) return UnauthorizedUser();
+
+            if (id != userId.Value)
+                return Forbid();
+
             var result = await _userService.UpdateAsync(id, request);
 
             if (!result.IsSuccess)
@@ -62,6 +80,12 @@ namespace ExpenseTracker.API.Controllers
         [HttpDelete("{id:guid}")]
         public async Task<IActionResult> Delete(Guid id)
         {
+            var userId = GetCurrentUserId();
+            if (userId is null) return UnauthorizedUser();
+
+            if (id != userId.Value)
+                return Forbid();
+
             var result = await _userService.DeleteAsync(id);
 
             if (!result.IsSuccess)
