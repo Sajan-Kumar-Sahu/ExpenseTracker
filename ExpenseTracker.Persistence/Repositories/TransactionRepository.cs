@@ -1,5 +1,6 @@
 using ExpenseTracker.Application.Repositories;
 using ExpenseTracker.Domain.Entities;
+using ExpenseTracker.Domain.Enums;
 using ExpenseTracker.Persistence.Context;
 using Microsoft.EntityFrameworkCore;
 
@@ -37,6 +38,21 @@ namespace ExpenseTracker.Persistence.Repositories
                 .AsNoTracking()
                 .OrderByDescending(t => t.TransactionDate)
                 .ToListAsync();
+        }
+
+        public async Task<decimal> GetCurrentBalanceByAccountIdAsync(Guid accountId, decimal openingBalance)
+        {
+            var inflow = await _context.FinancialTransactions
+                .Where(t => (t.AccountId == accountId && t.TransactionType == EntryType.Income) ||
+                            (t.TransferAccountId == accountId && t.TransactionType == EntryType.Transfer))
+                .SumAsync(t => (decimal?)t.Amount) ?? 0m;
+
+            var outflow = await _context.FinancialTransactions
+                .Where(t => t.AccountId == accountId &&
+                            (t.TransactionType == EntryType.Expense || t.TransactionType == EntryType.Transfer))
+                .SumAsync(t => (decimal?)t.Amount) ?? 0m;
+
+            return openingBalance + inflow - outflow;
         }
 
         public async Task<(List<FinancialTransaction> Items, int TotalCount)> GetByUserIdPagedAsync(

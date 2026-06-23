@@ -17,6 +17,8 @@ namespace ExpenseTracker.Application.DTOs.Account
 
         public decimal OpeningBalance { get; set; }
 
+        public decimal CurrentBalance { get; set; }
+
         public bool IsActive { get; set; }
 
         public AccountType AccountType { get; set; }

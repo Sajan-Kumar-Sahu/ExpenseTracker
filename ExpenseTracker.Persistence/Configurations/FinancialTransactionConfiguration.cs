@@ -22,7 +22,7 @@ namespace ExpenseTracker.Persistence.Configurations
             builder.Property(x => x.TransactionDate)
                 .IsRequired();
 
-            builder.Property(x => x.PaidTo)
+            builder.Property(x => x.Party)
                 .HasMaxLength(200);
 
             builder.Property(x => x.Notes)
