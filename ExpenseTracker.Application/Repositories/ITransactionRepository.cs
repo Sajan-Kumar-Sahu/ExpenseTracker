@@ -13,6 +13,8 @@ namespace ExpenseTracker.Application.Repositories
         Task<(List<FinancialTransaction> Items, int TotalCount)> GetByUserIdPagedAsync(
             Guid userId, int page, int pageSize);
 
+        Task<decimal> GetCurrentBalanceByAccountIdAsync(Guid accountId, decimal openingBalance);
+
         Task AddAsync(FinancialTransaction transaction);
 
         Task UpdateAsync(FinancialTransaction transaction);

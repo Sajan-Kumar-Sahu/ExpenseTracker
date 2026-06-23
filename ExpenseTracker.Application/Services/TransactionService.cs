@@ -37,6 +37,9 @@ namespace ExpenseTracker.Application.Services
             if (account.UserId != userId)
                 return Result<TransactionResponse>.Failure("Account does not belong to this user.");
 
+            if (!account.IsActive)
+                return Result<TransactionResponse>.Failure("Account is inactive and cannot be used for transactions.");
+
             if (request.Amount <= 0)
                 return Result<TransactionResponse>.Failure("Amount must be greater than zero.");
 
@@ -55,6 +58,9 @@ namespace ExpenseTracker.Application.Services
 
                 if (transferAccount.UserId != userId)
                     return Result<TransactionResponse>.Failure("Transfer account does not belong to this user.");
+
+                if (!transferAccount.IsActive)
+                    return Result<TransactionResponse>.Failure("Transfer account is inactive and cannot be used for transactions.");
             }
             else
             {
@@ -68,6 +74,9 @@ namespace ExpenseTracker.Application.Services
 
                 if (category.UserId != userId)
                     return Result<TransactionResponse>.Failure("Category does not belong to this user.");
+
+                if (!category.IsActive)
+                    return Result<TransactionResponse>.Failure("Category is inactive and cannot be used for transactions.");
             }
 
             var transaction = new FinancialTransaction
@@ -80,7 +89,7 @@ namespace ExpenseTracker.Application.Services
                 TransactionType = request.TransactionType,
                 Amount = request.Amount,
                 TransactionDate = request.TransactionDate,
-                PaidTo = request.PaidTo,
+                Party = request.Party,
                 Notes = request.Notes
             };
 
@@ -137,6 +146,9 @@ namespace ExpenseTracker.Application.Services
             if (account.UserId != userId)
                 return Result<TransactionResponse>.Failure("Account does not belong to this user.");
 
+            if (!account.IsActive)
+                return Result<TransactionResponse>.Failure("Account is inactive and cannot be used for transactions.");
+
             if (request.Amount <= 0)
                 return Result<TransactionResponse>.Failure("Amount must be greater than zero.");
 
@@ -147,11 +159,19 @@ namespace ExpenseTracker.Application.Services
 
                 if (request.TransferAccountId == request.AccountId)
                     return Result<TransactionResponse>.Failure("Source and destination accounts cannot be the same.");
+
+                var transferAccount = await _accountRepository.GetByIdAsync(request.TransferAccountId.Value);
+                if (transferAccount is not null && !transferAccount.IsActive)
+                    return Result<TransactionResponse>.Failure("Transfer account is inactive and cannot be used for transactions.");
             }
             else
             {
                 if (!request.CategoryId.HasValue)
                     return Result<TransactionResponse>.Failure("Category is required.");
+
+                var category = await _categoryRepository.GetByIdAsync(request.CategoryId.Value);
+                if (category is not null && !category.IsActive)
+                    return Result<TransactionResponse>.Failure("Category is inactive and cannot be used for transactions.");
             }
 
             transaction.AccountId = request.AccountId;
@@ -159,7 +179,7 @@ namespace ExpenseTracker.Application.Services
             transaction.CategoryId = request.CategoryId;
             transaction.Amount = request.Amount;
             transaction.TransactionDate = request.TransactionDate;
-            transaction.PaidTo = request.PaidTo;
+            transaction.Party = request.Party;
             transaction.Notes = request.Notes;
 
             await _transactionRepository.UpdateAsync(transaction);
@@ -194,7 +214,7 @@ namespace ExpenseTracker.Application.Services
             TransactionType = transaction.TransactionType,
             Amount = transaction.Amount,
             TransactionDate = transaction.TransactionDate,
-            PaidTo = transaction.PaidTo,
+            Party = transaction.Party,
             Notes = transaction.Notes,
             CreatedAt = transaction.CreatedAt
         };

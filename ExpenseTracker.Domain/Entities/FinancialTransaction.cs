@@ -19,7 +19,7 @@ namespace ExpenseTracker.Domain.Entities
 
         public DateTimeOffset TransactionDate { get; set; }
 
-        public string? PaidTo { get; set; }
+        public string? Party { get; set; }
 
         public string? Notes { get; set; }
 

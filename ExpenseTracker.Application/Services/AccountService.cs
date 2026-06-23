@@ -9,13 +9,16 @@ namespace ExpenseTracker.Application.Services
     public class AccountService : IAccountService
     {
         private readonly IAccountRepository _accountRepository;
+        private readonly ITransactionRepository _transactionRepository;
         private readonly IUnitOfWork _unitOfWork;
 
         public AccountService(
             IAccountRepository accountRepository,
+            ITransactionRepository transactionRepository,
             IUnitOfWork unitOfWork)
         {
             _accountRepository = accountRepository;
+            _transactionRepository = transactionRepository;
             _unitOfWork = unitOfWork;
         }
 
@@ -40,7 +43,7 @@ namespace ExpenseTracker.Application.Services
             await _accountRepository.AddAsync(account);
             await _unitOfWork.SaveChangesAsync();
 
-            return Result<AccountResponse>.Success(Map(account), "Account created successfully.");
+            return Result<AccountResponse>.Success(Map(account, account.OpeningBalance), "Account created successfully.");
         }
 
         public async Task<Result<AccountResponse>> GetByIdAsync(Guid id, Guid userId)
@@ -53,14 +56,22 @@ namespace ExpenseTracker.Application.Services
             if (account.UserId != userId)
                 return Result<AccountResponse>.Failure("Access denied.");
 
-            return Result<AccountResponse>.Success(Map(account));
+            var currentBalance = await _transactionRepository.GetCurrentBalanceByAccountIdAsync(account.Id, account.OpeningBalance);
+            return Result<AccountResponse>.Success(Map(account, currentBalance));
         }
 
         public async Task<Result<List<AccountResponse>>> GetAllByUserAsync(Guid userId)
         {
             var accounts = await _accountRepository.GetByUserIdAsync(userId);
 
-            return Result<List<AccountResponse>>.Success(accounts.Select(Map).ToList());
+            var responses = new List<AccountResponse>();
+            foreach (var account in accounts)
+            {
+                var currentBalance = await _transactionRepository.GetCurrentBalanceByAccountIdAsync(account.Id, account.OpeningBalance);
+                responses.Add(Map(account, currentBalance));
+            }
+
+            return Result<List<AccountResponse>>.Success(responses);
         }
 
         public async Task<Result<AccountResponse>> UpdateAsync(Guid userId, UpdateAccountRequest request)
@@ -81,7 +92,8 @@ namespace ExpenseTracker.Application.Services
             await _accountRepository.UpdateAsync(account);
             await _unitOfWork.SaveChangesAsync();
 
-            return Result<AccountResponse>.Success(Map(account), "Account updated successfully.");
+            var currentBalance = await _transactionRepository.GetCurrentBalanceByAccountIdAsync(account.Id, account.OpeningBalance);
+            return Result<AccountResponse>.Success(Map(account, currentBalance), "Account updated successfully.");
         }
 
         public async Task<Result> DeleteAsync(Guid id, Guid userId)
@@ -100,13 +112,14 @@ namespace ExpenseTracker.Application.Services
             return Result.Success("Account deleted successfully.");
         }
 
-        private static AccountResponse Map(Account account) => new()
+        private static AccountResponse Map(Account account, decimal currentBalance) => new()
         {
             Id = account.Id,
             UserId = account.UserId,
             Name = account.Name,
             Description = account.Description,
             OpeningBalance = account.OpeningBalance,
+            CurrentBalance = currentBalance,
             IsActive = account.IsActive,
             AccountType = account.AccountType,
             CreatedAt = account.CreatedAt
