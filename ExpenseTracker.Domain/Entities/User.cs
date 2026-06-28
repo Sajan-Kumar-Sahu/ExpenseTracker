@@ -25,5 +25,7 @@ namespace ExpenseTracker.Domain.Entities
         public ICollection<Account> Accounts { get; set; } = new List<Account>();
         public ICollection<Category> Categories { get; set; } = new List<Category>();
         public ICollection<FinancialTransaction> Transactions { get; set; } = new List<FinancialTransaction>();
+        public ICollection<Contact> Contacts { get; set; } = new List<Contact>();
+        public ICollection<Settlement> Settlements { get; set; } = new List<Settlement>();
     }
 }

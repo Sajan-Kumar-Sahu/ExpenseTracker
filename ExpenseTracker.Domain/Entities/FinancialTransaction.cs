@@ -23,6 +23,8 @@ namespace ExpenseTracker.Domain.Entities
 
         public string? Notes { get; set; }
 
+        public Guid? SettlementId { get; set; }
+
         public User User { get; set; } = null!;
 
         public Account Account { get; set; } = null!;
@@ -30,5 +32,7 @@ namespace ExpenseTracker.Domain.Entities
         public Account? TransferAccount { get; set; }
 
         public Category? Category { get; set; }
+
+        public Settlement? Settlement { get; set; }
     }
 }

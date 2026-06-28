@@ -27,6 +27,8 @@ namespace ExpenseTracker.Application.DTOs.FinancialTransaction
 
         public string? Notes { get; set; }
 
+        public Guid? SettlementId { get; set; }
+
         public DateTimeOffset CreatedAt { get; set; }
     }
 }

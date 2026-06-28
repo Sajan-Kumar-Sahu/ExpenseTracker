@@ -138,6 +138,9 @@ namespace ExpenseTracker.Application.Services
             if (transaction.UserId != userId)
                 return Result<TransactionResponse>.Failure("Access denied.");
 
+            if (transaction.SettlementId.HasValue)
+                return Result<TransactionResponse>.Failure("Settlement payment transactions cannot be edited directly. Manage them through the settlement.");
+
             var account = await _accountRepository.GetByIdAsync(request.AccountId);
 
             if (account is null)
@@ -198,6 +201,9 @@ namespace ExpenseTracker.Application.Services
             if (transaction.UserId != userId)
                 return Result.Failure("Access denied.");
 
+            if (transaction.SettlementId.HasValue)
+                return Result.Failure("Settlement payment transactions cannot be deleted directly. Manage them through the settlement.");
+
             await _transactionRepository.DeleteAsync(transaction);
             await _unitOfWork.SaveChangesAsync();
 
@@ -216,6 +222,7 @@ namespace ExpenseTracker.Application.Services
             TransactionDate = transaction.TransactionDate,
             Party = transaction.Party,
             Notes = transaction.Notes,
+            SettlementId = transaction.SettlementId,
             CreatedAt = transaction.CreatedAt
         };
     }
