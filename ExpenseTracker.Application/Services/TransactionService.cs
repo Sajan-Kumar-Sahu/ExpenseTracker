@@ -139,7 +139,25 @@ namespace ExpenseTracker.Application.Services
                 return Result<TransactionResponse>.Failure("Access denied.");
 
             if (transaction.SettlementId.HasValue)
-                return Result<TransactionResponse>.Failure("Settlement payment transactions cannot be edited directly. Manage them through the settlement.");
+            {
+                // Settlement transactions are immutable in their financial fields (amount, account, date).
+                // Only category, notes, and party may be updated.
+                if (request.CategoryId.HasValue)
+                {
+                    var cat = await _categoryRepository.GetByIdAsync(request.CategoryId.Value);
+                    if (cat is not null && !cat.IsActive)
+                        return Result<TransactionResponse>.Failure("Category is inactive and cannot be used.");
+                }
+
+                transaction.CategoryId = request.CategoryId;
+                transaction.Notes     = request.Notes;
+                transaction.Party     = request.Party;
+
+                await _transactionRepository.UpdateAsync(transaction);
+                await _unitOfWork.SaveChangesAsync();
+
+                return Result<TransactionResponse>.Success(Map(transaction), "Transaction updated successfully.");
+            }
 
             var account = await _accountRepository.GetByIdAsync(request.AccountId);
 

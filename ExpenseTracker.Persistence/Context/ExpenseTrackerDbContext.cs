@@ -27,6 +27,10 @@ namespace ExpenseTracker.Persistence.Context
 
         public DbSet<Settlement> Settlements => Set<Settlement>();
 
+        public DbSet<Project> Projects => Set<Project>();
+
+        public DbSet<WorkLog> WorkLogs => Set<WorkLog>();
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
