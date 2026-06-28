@@ -27,6 +27,8 @@ namespace ExpenseTracker.Persistence
             services.AddScoped<ITransactionRepository, TransactionRepository>();
             services.AddScoped<IContactRepository, ContactRepository>();
             services.AddScoped<ISettlementRepository, SettlementRepository>();
+            services.AddScoped<IProjectRepository, ProjectRepository>();
+            services.AddScoped<IWorkLogRepository, WorkLogRepository>();
 
             //Services
 
@@ -37,6 +39,8 @@ namespace ExpenseTracker.Persistence
             services.AddScoped<IDashboardService, DashboardService>();
             services.AddScoped<IContactService, ContactService>();
             services.AddScoped<ISettlementService, SettlementService>();
+            services.AddScoped<IProjectService, ProjectService>();
+            services.AddScoped<IWorkLogService, WorkLogService>();
 
             return services;
         }
