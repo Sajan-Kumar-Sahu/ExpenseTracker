@@ -21,6 +21,7 @@ namespace ExpenseTracker.Persistence.Repositories
                 .Include(t => t.Account)
                 .Include(t => t.TransferAccount)
                 .Include(t => t.Category)
+                .Include(t => t.Settlement)
                 .FirstOrDefaultAsync(t => t.Id == id);
         }
 

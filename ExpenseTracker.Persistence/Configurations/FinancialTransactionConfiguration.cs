@@ -48,6 +48,11 @@ namespace ExpenseTracker.Persistence.Configurations
                 .HasForeignKey(x => x.CategoryId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            builder.HasOne(x => x.Settlement)
+                .WithMany(x => x.Transactions)
+                .HasForeignKey(x => x.SettlementId)
+                .OnDelete(DeleteBehavior.Restrict);
+
             builder.HasIndex(x => x.UserId);
 
             builder.HasIndex(x => x.AccountId);

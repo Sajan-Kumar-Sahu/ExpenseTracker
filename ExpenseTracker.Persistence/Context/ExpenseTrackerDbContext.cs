@@ -23,6 +23,10 @@ namespace ExpenseTracker.Persistence.Context
 
         public DbSet<FinancialTransaction> FinancialTransactions => Set<FinancialTransaction>();
 
+        public DbSet<Contact> Contacts => Set<Contact>();
+
+        public DbSet<Settlement> Settlements => Set<Settlement>();
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
