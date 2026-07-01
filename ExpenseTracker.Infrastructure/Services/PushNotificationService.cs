@@ -38,6 +38,14 @@ namespace ExpenseTracker.Infrastructure.Services
                 GoogleCredential credential;
 
                 var inlineJson = configuration["Firebase:ServiceAccountKeyJson"];
+
+                Console.WriteLine($"Firebase JSON Exists: {!string.IsNullOrWhiteSpace(inlineJson)}");
+                Console.WriteLine($"Firebase JSON Length: {inlineJson?.Length ?? 0}");
+
+                foreach (var item in configuration.AsEnumerable().Where(x => x.Key.StartsWith("Firebase")))
+                {
+                    Console.WriteLine($"{item.Key} = {(item.Key.Contains("Json") ? "***FOUND***" : item.Value)}");
+                }
                 if (!string.IsNullOrWhiteSpace(inlineJson))
                 {
                     using var jsonStream = new System.IO.MemoryStream(
