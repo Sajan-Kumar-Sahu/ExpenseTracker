@@ -11,7 +11,7 @@ namespace ExpenseTracker.API.BackgroundServices
         private readonly ILogger<ReminderBackgroundService> _logger;
 
         // Run every 5 minutes. Replace with Quartz.NET or Hangfire trigger when needed.
-        private static readonly TimeSpan Interval = TimeSpan.FromMinutes(5);
+        private static readonly TimeSpan Interval = TimeSpan.FromMinutes(1);
 
         public ReminderBackgroundService(
             IServiceScopeFactory scopeFactory,

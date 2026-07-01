@@ -41,7 +41,10 @@ namespace ExpenseTracker.Persistence.Repositories
 
         public async Task<List<Reminder>> GetTodayByUserIdAsync(Guid userId)
         {
-            var todayStart = DateTimeOffset.UtcNow.Date;
+            var todayStart = new DateTimeOffset(
+             DateTime.UtcNow.Date,
+             TimeSpan.Zero);
+
             var todayEnd = todayStart.AddDays(1);
 
             return await _context.Reminders

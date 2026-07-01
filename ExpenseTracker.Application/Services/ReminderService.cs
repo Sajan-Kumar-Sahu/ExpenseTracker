@@ -250,15 +250,27 @@ namespace ExpenseTracker.Application.Services
         private static ReminderListResponse MapToList(Reminder reminder) => new()
         {
             Id = reminder.Id,
+            UserId = reminder.UserId,
             ReminderType = reminder.ReminderType,
             ReferenceModule = reminder.ReferenceModule,
             ReferenceId = reminder.ReferenceId,
             Title = reminder.Title,
+            Message = reminder.Message,
             ScheduledDate = reminder.ScheduledDate,
             Priority = reminder.Priority,
             Status = reminder.Status,
+            RepeatType = reminder.RepeatType,
+            RepeatInterval = reminder.RepeatInterval,
+            IsPushNotificationEnabled = reminder.IsPushNotificationEnabled,
+            IsInAppNotificationEnabled = reminder.IsInAppNotificationEnabled,
+            LastTriggeredAt = reminder.LastTriggeredAt,
+            NextTriggerAt = reminder.NextTriggerAt,
+            CompletedAt = reminder.CompletedAt,
+            ExpiresAt = reminder.ExpiresAt,
+            Notes = reminder.Notes,
             IsActive = reminder.IsActive,
-            CreatedAt = reminder.CreatedAt
+            CreatedAt = reminder.CreatedAt,
+            UpdatedAt = reminder.UpdatedAt
         };
     }
 }

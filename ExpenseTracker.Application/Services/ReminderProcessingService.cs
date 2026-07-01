@@ -64,9 +64,14 @@ namespace ExpenseTracker.Application.Services
 
                 reminder.LastTriggeredAt = DateTimeOffset.UtcNow;
 
-                if (reminder.RepeatType != RepeatType.None)
+                if (reminder.RepeatType == RepeatType.None)
+                {
+                    reminder.Status = ReminderStatus.Completed;
+                }
+                else
                 {
                     reminder.NextTriggerAt = CalculateNextTrigger(reminder);
+                    reminder.ScheduledDate = reminder.NextTriggerAt.Value;
                 }
 
                 await _reminderRepository.UpdateAsync(reminder);

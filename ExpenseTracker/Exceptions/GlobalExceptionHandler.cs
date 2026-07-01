@@ -1,5 +1,6 @@
 ﻿using ExpenseTracker.API.Common;
 using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.Extensions.Hosting;
 
 namespace ExpenseTracker.API.Exceptions
 {
@@ -22,10 +23,17 @@ namespace ExpenseTracker.API.Exceptions
                 exception,
                 exception.Message);
 
+            var env = httpContext.RequestServices
+                .GetRequiredService<IHostEnvironment>();
+
+            var message = env.IsDevelopment() && exception.InnerException is not null
+                ? $"{exception.Message} | Inner: {exception.InnerException.Message}"
+                : exception.Message;
+
             var response = new ApiResponse<object>
             {
                 Success = false,
-                Message = exception.Message
+                Message = message
             };
 
             httpContext.Response.StatusCode = 500;

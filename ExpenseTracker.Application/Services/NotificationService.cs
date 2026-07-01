@@ -145,6 +145,7 @@ namespace ExpenseTracker.Application.Services
         private static NotificationListResponse MapToList(Notification notification) => new()
         {
             Id = notification.Id,
+            UserId = notification.UserId,
             ReminderId = notification.ReminderId,
             Title = notification.Title,
             Body = notification.Body,
@@ -152,9 +153,13 @@ namespace ExpenseTracker.Application.Services
             ReferenceModule = notification.ReferenceModule,
             ReferenceId = notification.ReferenceId,
             IsRead = notification.IsRead,
+            ReadAt = notification.ReadAt,
+            IsClicked = notification.IsClicked,
+            ClickedAt = notification.ClickedAt,
             SentAt = notification.SentAt,
             DeliveryStatus = notification.DeliveryStatus,
-            ActionUrl = notification.ActionUrl
+            ActionUrl = notification.ActionUrl,
+            CreatedAt = notification.CreatedAt
         };
     }
 }
