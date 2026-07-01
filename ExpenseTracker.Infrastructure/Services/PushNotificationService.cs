@@ -46,13 +46,27 @@ namespace ExpenseTracker.Infrastructure.Services
 
                 Console.WriteLine("========== FIREBASE DEBUG ==========");
 
+                // Dump every OS env var key that contains "firebase" to reveal what Railway actually passes
+                Console.WriteLine("-- Raw OS env vars containing 'firebase' (case-insensitive) --");
+                foreach (System.Collections.DictionaryEntry e in Environment.GetEnvironmentVariables())
+                {
+                    var k = e.Key?.ToString() ?? "";
+                    if (k.Contains("firebase", StringComparison.OrdinalIgnoreCase) ||
+                        k.Contains("FIREBASE", StringComparison.OrdinalIgnoreCase))
+                        Console.WriteLine($"  OS ENV: {k} = Length({e.Value?.ToString()?.Length ?? 0})");
+                }
+                Console.WriteLine("-- End OS env vars --");
+
                 // Check all three sources; flat env var bypasses double-underscore mapping issues in Railway
-                var base64 = configuration["Firebase:ServiceAccountKeyBase64"]
-                    ?? Environment.GetEnvironmentVariable("FIREBASE_CREDENTIALS_BASE64");
+                var base64 = configuration["Firebase:ServiceAccountKeyBase64"];
+                if (string.IsNullOrWhiteSpace(base64))
+                    base64 = Environment.GetEnvironmentVariable("FIREBASE_CREDENTIALS_BASE64");
                 Console.WriteLine($"Base64 Exists : {!string.IsNullOrWhiteSpace(base64)}");
                 Console.WriteLine($"Base64 Length : {base64?.Length ?? 0}");
 
                 var inlineJson = configuration["Firebase:ServiceAccountKeyJson"];
+                if (string.IsNullOrWhiteSpace(inlineJson))
+                    inlineJson = Environment.GetEnvironmentVariable("FIREBASE_SERVICE_JSON");
                 Console.WriteLine($"Inline JSON Exists : {!string.IsNullOrWhiteSpace(inlineJson)}");
                 Console.WriteLine($"Inline JSON Length : {inlineJson?.Length ?? 0}");
 
