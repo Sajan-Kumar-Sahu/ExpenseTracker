@@ -25,133 +25,56 @@ namespace ExpenseTracker.Infrastructure.Services
         {
             _logger = logger;
             _userRepository = userRepository;
-            EnsureFirebaseInitialized(configuration);
+            EnsureFirebaseInitialized(configuration, logger);
         }
 
-        private static void EnsureFirebaseInitialized(IConfiguration configuration)
+        private static void EnsureFirebaseInitialized(IConfiguration configuration, ILogger logger)
         {
-            if (FirebaseApp.DefaultInstance is not null)
-            {
-                Console.WriteLine("[Firebase] Already initialized.");
-                return;
-            }
+            if (FirebaseApp.DefaultInstance is not null) return;
 
             lock (_lock)
             {
-                if (FirebaseApp.DefaultInstance is not null)
-                {
-                    Console.WriteLine("[Firebase] Already initialized inside lock.");
-                    return;
-                }
+                if (FirebaseApp.DefaultInstance is not null) return;
 
-                Console.WriteLine("========== FIREBASE DEBUG ==========");
+                GoogleCredential credential;
 
-                // Dump every OS env var key that contains "firebase" to reveal what Railway actually passes
-                Console.WriteLine("-- Raw OS env vars containing 'firebase' (case-insensitive) --");
-                foreach (System.Collections.DictionaryEntry e in Environment.GetEnvironmentVariables())
-                {
-                    var k = e.Key?.ToString() ?? "";
-                    if (k.Contains("firebase", StringComparison.OrdinalIgnoreCase) ||
-                        k.Contains("FIREBASE", StringComparison.OrdinalIgnoreCase))
-                        Console.WriteLine($"  OS ENV: {k} = Length({e.Value?.ToString()?.Length ?? 0})");
-                }
-                Console.WriteLine("-- End OS env vars --");
-
-                // Check all three sources; flat env var bypasses double-underscore mapping issues in Railway
                 var base64 = configuration["Firebase:ServiceAccountKeyBase64"];
                 if (string.IsNullOrWhiteSpace(base64))
                     base64 = Environment.GetEnvironmentVariable("FIREBASE_CREDENTIALS_BASE64");
-                Console.WriteLine($"Base64 Exists : {!string.IsNullOrWhiteSpace(base64)}");
-                Console.WriteLine($"Base64 Length : {base64?.Length ?? 0}");
 
                 var inlineJson = configuration["Firebase:ServiceAccountKeyJson"];
                 if (string.IsNullOrWhiteSpace(inlineJson))
                     inlineJson = Environment.GetEnvironmentVariable("FIREBASE_SERVICE_JSON");
-                Console.WriteLine($"Inline JSON Exists : {!string.IsNullOrWhiteSpace(inlineJson)}");
-                Console.WriteLine($"Inline JSON Length : {inlineJson?.Length ?? 0}");
 
                 var keyPath = configuration["Firebase:ServiceAccountKeyPath"];
-                Console.WriteLine($"KeyPath : {keyPath}");
-
-                GoogleCredential credential;
 
                 if (!string.IsNullOrWhiteSpace(base64))
                 {
-                    Console.WriteLine("[Firebase] Using Base64 credentials.");
-
-                    try
-                    {
-                        var json = Encoding.UTF8.GetString(
-                            Convert.FromBase64String(base64.Trim()));
-
-                        Console.WriteLine($"Decoded JSON Length : {json.Length}");
-                        Console.WriteLine($"Decoded JSON Starts With : {json.Substring(0, Math.Min(50, json.Length))}");
-
-                        using var stream = new MemoryStream(Encoding.UTF8.GetBytes(json));
-
-                        credential = GoogleCredential.FromStream(stream);
-
-                        Console.WriteLine("[Firebase] GoogleCredential created successfully from Base64.");
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine("[Firebase] Failed to decode Base64.");
-                        Console.WriteLine(ex.ToString());
-                        throw;
-                    }
+                    var json = Encoding.UTF8.GetString(Convert.FromBase64String(base64.Trim()));
+                    using var stream = new MemoryStream(Encoding.UTF8.GetBytes(json));
+                    credential = GoogleCredential.FromStream(stream);
+                    logger.LogInformation("[Firebase] Initialized from Base64 credentials.");
                 }
                 else if (!string.IsNullOrWhiteSpace(inlineJson))
                 {
-                    Console.WriteLine("[Firebase] Using inline JSON.");
-
-                    try
-                    {
-                        using var stream = new MemoryStream(Encoding.UTF8.GetBytes(inlineJson));
-
-                        credential = GoogleCredential.FromStream(stream);
-
-                        Console.WriteLine("[Firebase] GoogleCredential created successfully from inline JSON.");
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine("[Firebase] Failed to parse inline JSON.");
-                        Console.WriteLine(ex.ToString());
-                        throw;
-                    }
+                    using var stream = new MemoryStream(Encoding.UTF8.GetBytes(inlineJson));
+                    credential = GoogleCredential.FromStream(stream);
+                    logger.LogInformation("[Firebase] Initialized from inline JSON.");
                 }
                 else if (!string.IsNullOrWhiteSpace(keyPath))
                 {
-                    Console.WriteLine("[Firebase] Using key path.");
-
-                    Console.WriteLine($"File Exists : {File.Exists(keyPath)}");
-
                     using var stream = File.OpenRead(keyPath);
-
                     credential = GoogleCredential.FromStream(stream);
-
-                    Console.WriteLine("[Firebase] GoogleCredential created successfully from file.");
+                    logger.LogInformation("[Firebase] Initialized from key file.");
                 }
                 else
                 {
-                    Console.WriteLine("[Firebase] No Firebase configuration found.");
-
-                    foreach (var item in configuration.AsEnumerable()
-                                                      .Where(x => x.Key.StartsWith("Firebase")))
-                    {
-                        Console.WriteLine($"{item.Key} = Length({item.Value?.Length ?? 0})");
-                    }
-
                     throw new InvalidOperationException(
-                        "Firebase credentials not configured.");
+                        "Firebase credentials not configured. Set Firebase__ServiceAccountKeyJson, " +
+                        "Firebase__ServiceAccountKeyBase64, or Firebase__ServiceAccountKeyPath.");
                 }
 
-                FirebaseApp.Create(new AppOptions
-                {
-                    Credential = credential
-                });
-
-                Console.WriteLine("[Firebase] FirebaseApp created successfully.");
-                Console.WriteLine("====================================");
+                FirebaseApp.Create(new AppOptions { Credential = credential });
             }
         }
 
