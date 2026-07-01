@@ -13,6 +13,7 @@ namespace ExpenseTracker.Application.Services
         private readonly IContactRepository _contactRepository;
         private readonly IAccountRepository _accountRepository;
         private readonly ITransactionRepository _transactionRepository;
+        private readonly IReminderRepository _reminderRepository;
         private readonly IUnitOfWork _unitOfWork;
 
         public SettlementService(
@@ -20,12 +21,14 @@ namespace ExpenseTracker.Application.Services
             IContactRepository contactRepository,
             IAccountRepository accountRepository,
             ITransactionRepository transactionRepository,
+            IReminderRepository reminderRepository,
             IUnitOfWork unitOfWork)
         {
             _settlementRepository = settlementRepository;
             _contactRepository = contactRepository;
             _accountRepository = accountRepository;
             _transactionRepository = transactionRepository;
+            _reminderRepository = reminderRepository;
             _unitOfWork = unitOfWork;
         }
 
@@ -70,6 +73,38 @@ namespace ExpenseTracker.Application.Services
             };
 
             await _settlementRepository.AddAsync(settlement);
+
+            if (settlement.DueDate.HasValue)
+            {
+                var reminderType = settlement.SettlementType == SettlementType.Receivable
+                    ? ReminderType.SettlementReceivable
+                    : ReminderType.SettlementPayable;
+
+                var reminder = new Reminder
+                {
+                    Id = Guid.NewGuid(),
+                    UserId = userId,
+                    ReminderType = reminderType,
+                    ReferenceModule = ReferenceModule.Settlement,
+                    ReferenceId = settlement.Id,
+                    Title = settlement.SettlementType == SettlementType.Receivable
+                        ? "Collect Settlement Payment"
+                        : "Pay Settlement",
+                    Message = settlement.SettlementType == SettlementType.Receivable
+                        ? $"Remember to collect {settlement.OriginalAmount:F2} from {contact.Name}."
+                        : $"Remember to pay {settlement.OriginalAmount:F2} to {contact.Name}.",
+                    ScheduledDate = settlement.DueDate.Value,
+                    Priority = ReminderPriority.High,
+                    Status = ReminderStatus.Pending,
+                    RepeatType = RepeatType.None,
+                    IsPushNotificationEnabled = true,
+                    IsInAppNotificationEnabled = true,
+                    IsActive = true
+                };
+
+                await _reminderRepository.AddAsync(reminder);
+            }
+
             await _unitOfWork.SaveChangesAsync();
 
             settlement.Contact = contact;
@@ -276,6 +311,20 @@ namespace ExpenseTracker.Application.Services
                 ? SettlementStatus.Completed
                 : SettlementStatus.Partial;
 
+            if (settlement.Status == SettlementStatus.Completed)
+            {
+                var reminder = await _reminderRepository.GetActiveReminderByReferenceAsync(
+                    settlement.UserId, ReferenceModule.Settlement,
+                    settlement.Id, ReminderType.SettlementReceivable);
+
+                if (reminder is not null)
+                {
+                    reminder.Status = ReminderStatus.Completed;
+                    reminder.CompletedAt = DateTimeOffset.UtcNow;
+                    await _reminderRepository.UpdateAsync(reminder);
+                }
+            }
+
             await _transactionRepository.AddAsync(transaction);
             await _settlementRepository.UpdateAsync(settlement);
             await _unitOfWork.SaveChangesAsync();
@@ -342,6 +391,20 @@ namespace ExpenseTracker.Application.Services
             settlement.Status = settlement.PendingAmount == 0
                 ? SettlementStatus.Completed
                 : SettlementStatus.Partial;
+
+            if (settlement.Status == SettlementStatus.Completed)
+            {
+                var reminder = await _reminderRepository.GetActiveReminderByReferenceAsync(
+                    settlement.UserId, ReferenceModule.Settlement,
+                    settlement.Id, ReminderType.SettlementPayable);
+
+                if (reminder is not null)
+                {
+                    reminder.Status = ReminderStatus.Completed;
+                    reminder.CompletedAt = DateTimeOffset.UtcNow;
+                    await _reminderRepository.UpdateAsync(reminder);
+                }
+            }
 
             await _transactionRepository.AddAsync(transaction);
             await _settlementRepository.UpdateAsync(settlement);

@@ -35,6 +35,9 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
 
         builder.Property(x => x.RefreshTokenExpiry);
 
+        builder.Property(x => x.DeviceToken)
+            .HasMaxLength(512);
+
         builder.HasIndex(x => x.Email)
             .IsUnique();
     }

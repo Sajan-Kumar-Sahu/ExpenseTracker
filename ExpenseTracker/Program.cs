@@ -1,3 +1,4 @@
+using ExpenseTracker.API.BackgroundServices;
 using ExpenseTracker.API.Exceptions;
 using Microsoft.EntityFrameworkCore;
 using ExpenseTracker.Application;
@@ -92,6 +93,8 @@ builder.Services.AddSwaggerGen(options =>
 });
 
 #endregion
+
+builder.Services.AddHostedService<ReminderBackgroundService>();
 
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 

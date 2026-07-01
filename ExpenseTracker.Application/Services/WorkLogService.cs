@@ -11,15 +11,18 @@ namespace ExpenseTracker.Application.Services
     {
         private readonly IWorkLogRepository _workLogRepository;
         private readonly IProjectRepository _projectRepository;
+        private readonly IReminderRepository _reminderRepository;
         private readonly IUnitOfWork _unitOfWork;
 
         public WorkLogService(
             IWorkLogRepository workLogRepository,
             IProjectRepository projectRepository,
+            IReminderRepository reminderRepository,
             IUnitOfWork unitOfWork)
         {
             _workLogRepository = workLogRepository;
             _projectRepository = projectRepository;
+            _reminderRepository = reminderRepository;
             _unitOfWork = unitOfWork;
         }
 
@@ -57,6 +60,27 @@ namespace ExpenseTracker.Application.Services
             };
 
             await _workLogRepository.AddAsync(workLog);
+
+            var reminder = new Reminder
+            {
+                Id = Guid.NewGuid(),
+                UserId = userId,
+                ReminderType = ReminderType.WorkLogApply,
+                ReferenceModule = ReferenceModule.WorkLog,
+                ReferenceId = workLog.Id,
+                Title = "Apply Overtime",
+                Message = "Don't forget to apply your overtime.",
+                ScheduledDate = new DateTimeOffset(
+                    workLog.WorkDate.AddDays(5).ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc)),
+                Priority = ReminderPriority.Medium,
+                Status = ReminderStatus.Pending,
+                RepeatType = RepeatType.None,
+                IsPushNotificationEnabled = true,
+                IsInAppNotificationEnabled = true,
+                IsActive = true
+            };
+
+            await _reminderRepository.AddAsync(reminder);
             await _unitOfWork.SaveChangesAsync();
 
             workLog.Project = project!;
@@ -286,6 +310,16 @@ namespace ExpenseTracker.Application.Services
 
             workLog.Status = WorkLogStatus.Applied;
             workLog.AppliedDate = DateOnly.FromDateTime(DateTime.UtcNow);
+
+            var reminder = await _reminderRepository.GetActiveReminderByReferenceAsync(
+                workLog.UserId, ReferenceModule.WorkLog, workLog.Id, ReminderType.WorkLogApply);
+
+            if (reminder is not null)
+            {
+                reminder.Status = ReminderStatus.Completed;
+                reminder.CompletedAt = DateTimeOffset.UtcNow;
+                await _reminderRepository.UpdateAsync(reminder);
+            }
 
             await _workLogRepository.UpdateAsync(workLog);
             await _unitOfWork.SaveChangesAsync();

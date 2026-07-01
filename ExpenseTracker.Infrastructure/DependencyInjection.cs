@@ -9,6 +9,7 @@ namespace ExpenseTracker.Infrastructure
         public static IServiceCollection AddInfrastructure(this IServiceCollection services)
         {
             services.AddScoped<ITokenService, JwtTokenService>();
+            services.AddScoped<IPushNotificationService, PushNotificationService>();
 
             return services;
         }
