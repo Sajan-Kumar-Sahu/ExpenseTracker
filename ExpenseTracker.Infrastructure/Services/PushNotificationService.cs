@@ -46,7 +46,9 @@ namespace ExpenseTracker.Infrastructure.Services
 
                 Console.WriteLine("========== FIREBASE DEBUG ==========");
 
-                var base64 = configuration["Firebase:ServiceAccountKeyBase64"];
+                // Check all three sources; flat env var bypasses double-underscore mapping issues in Railway
+                var base64 = configuration["Firebase:ServiceAccountKeyBase64"]
+                    ?? Environment.GetEnvironmentVariable("FIREBASE_CREDENTIALS_BASE64");
                 Console.WriteLine($"Base64 Exists : {!string.IsNullOrWhiteSpace(base64)}");
                 Console.WriteLine($"Base64 Length : {base64?.Length ?? 0}");
 
