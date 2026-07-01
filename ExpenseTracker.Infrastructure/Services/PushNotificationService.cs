@@ -6,6 +6,7 @@ using FirebaseAdmin.Messaging;
 using Google.Apis.Auth.OAuth2;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using System.Text;
 using FcmNotification = FirebaseAdmin.Messaging.Notification;
 
 namespace ExpenseTracker.Infrastructure.Services
@@ -37,32 +38,28 @@ namespace ExpenseTracker.Infrastructure.Services
 
                 GoogleCredential credential;
 
-                var inlineJson = configuration["Firebase:ServiceAccountKeyJson"];
-
-                Console.WriteLine("========== FIREBASE DEBUG ==========");
-                Console.WriteLine($"Is null: {inlineJson == null}");
-                Console.WriteLine($"Is empty: {inlineJson == ""}");
-                Console.WriteLine($"Length: {inlineJson?.Length ?? 0}");
-
-                if (inlineJson != null)
+                // 1. Production (Railway) - Base64
+                var base64 = configuration["Firebase:ServiceAccountKeyBase64"];
+                if (!string.IsNullOrWhiteSpace(base64))
                 {
-                    Console.WriteLine($"First 30 chars: {inlineJson.Substring(0, Math.Min(30, inlineJson.Length))}");
-                }
-                Console.WriteLine("====================================");
-                if (!string.IsNullOrWhiteSpace(inlineJson))
-                {
-                    using var jsonStream = new System.IO.MemoryStream(
-                        System.Text.Encoding.UTF8.GetBytes(inlineJson));
+                    var json = Encoding.UTF8.GetString(
+                        Convert.FromBase64String(base64));
+
+                    using var jsonStream = new MemoryStream(
+                        Encoding.UTF8.GetBytes(json));
+
                     credential = GoogleCredential.FromStream(jsonStream);
                 }
+                // 2. Development - Local JSON file
                 else
                 {
                     var keyPath = configuration["Firebase:ServiceAccountKeyPath"];
+
                     if (string.IsNullOrWhiteSpace(keyPath))
                         throw new InvalidOperationException(
-                            "Firebase credentials not configured. Set Firebase:ServiceAccountKeyJson or Firebase:ServiceAccountKeyPath.");
+                            "Firebase credentials not configured. Set Firebase:ServiceAccountKeyBase64 or Firebase:ServiceAccountKeyPath.");
 
-                    using var fileStream = System.IO.File.OpenRead(keyPath);
+                    using var fileStream = File.OpenRead(keyPath);
                     credential = GoogleCredential.FromStream(fileStream);
                 }
 
