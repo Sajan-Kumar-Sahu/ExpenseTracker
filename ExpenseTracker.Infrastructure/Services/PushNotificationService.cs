@@ -39,13 +39,16 @@ namespace ExpenseTracker.Infrastructure.Services
 
                 var inlineJson = configuration["Firebase:ServiceAccountKeyJson"];
 
-                Console.WriteLine($"Firebase JSON Exists: {!string.IsNullOrWhiteSpace(inlineJson)}");
-                Console.WriteLine($"Firebase JSON Length: {inlineJson?.Length ?? 0}");
+                Console.WriteLine("========== FIREBASE DEBUG ==========");
+                Console.WriteLine($"Is null: {inlineJson == null}");
+                Console.WriteLine($"Is empty: {inlineJson == ""}");
+                Console.WriteLine($"Length: {inlineJson?.Length ?? 0}");
 
-                foreach (var item in configuration.AsEnumerable().Where(x => x.Key.StartsWith("Firebase")))
+                if (inlineJson != null)
                 {
-                    Console.WriteLine($"{item.Key} = {(item.Key.Contains("Json") ? "***FOUND***" : item.Value)}");
+                    Console.WriteLine($"First 30 chars: {inlineJson.Substring(0, Math.Min(30, inlineJson.Length))}");
                 }
+                Console.WriteLine("====================================");
                 if (!string.IsNullOrWhiteSpace(inlineJson))
                 {
                     using var jsonStream = new System.IO.MemoryStream(
