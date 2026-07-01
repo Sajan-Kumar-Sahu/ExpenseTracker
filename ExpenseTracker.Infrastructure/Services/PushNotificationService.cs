@@ -7,7 +7,6 @@ using Google.Apis.Auth.OAuth2;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System.Text;
-using FcmNotification = FirebaseAdmin.Messaging.Notification;
 
 namespace ExpenseTracker.Infrastructure.Services
 {
@@ -86,24 +85,39 @@ namespace ExpenseTracker.Infrastructure.Services
         {
             try
             {
+                // Data-only message: no Notification payload.
+                // Android treats messages with a Notification payload as "notification messages"
+                // and batches them during Doze even at Priority.High.
+                // Data-only + Priority.High reliably wakes the device from Doze immediately.
+                var payload = new Dictionary<string, string>(data ?? new Dictionary<string, string>())
+                {
+                    ["title"] = title,
+                    ["body"] = body,
+                };
+
                 var message = new Message
                 {
                     Token = deviceToken,
-                    Notification = new FcmNotification { Title = title, Body = body },
-                    Data = data ?? new Dictionary<string, string>(),
+                    Data = payload,
                     Android = new AndroidConfig
                     {
                         Priority = Priority.High,
-                        Notification = new AndroidNotification
-                        {
-                            ChannelId = "reminders_channel",
-                            Sound = "default"
-                        }
                     },
                     Apns = new ApnsConfig
                     {
-                        Aps = new Aps { Sound = "default", Badge = 1 }
-                    }
+                        Headers = new Dictionary<string, string>
+                        {
+                            // content-available=1 wakes the iOS app for background processing
+                            ["apns-push-type"] = "background",
+                            ["apns-priority"] = "5",
+                        },
+                        Aps = new Aps
+                        {
+                            ContentAvailable = true,
+                            Sound = "default",
+                            Badge = 1,
+                        },
+                    },
                 };
 
                 var messageId = await FirebaseMessaging.DefaultInstance.SendAsync(message);
