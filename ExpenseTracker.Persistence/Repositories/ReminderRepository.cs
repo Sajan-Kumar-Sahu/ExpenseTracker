@@ -88,32 +88,6 @@ namespace ExpenseTracker.Persistence.Repositories
                 .ToListAsync();
         }
 
-        public async Task<List<Reminder>> GetDueRemindersAsync()
-        {
-            var now = DateTimeOffset.UtcNow;
-
-            return await _context.Reminders
-                .Where(r =>
-                    r.Status == ReminderStatus.Pending &&
-                    r.IsActive &&
-                    r.ScheduledDate <= now &&
-                    (r.ExpiresAt == null || r.ExpiresAt > now) &&
-                    (r.LastTriggeredAt == null || r.NextTriggerAt == null || r.NextTriggerAt <= now))
-                .ToListAsync();
-        }
-
-        public async Task<List<Reminder>> GetExpiredRemindersAsync()
-        {
-            var now = DateTimeOffset.UtcNow;
-
-            return await _context.Reminders
-                .Where(r =>
-                    r.Status == ReminderStatus.Pending &&
-                    r.ExpiresAt != null &&
-                    r.ExpiresAt <= now)
-                .ToListAsync();
-        }
-
         public async Task<Reminder?> GetActiveReminderByReferenceAsync(
             Guid userId, ReferenceModule module, Guid referenceId, ReminderType type)
         {
@@ -136,6 +110,20 @@ namespace ExpenseTracker.Persistence.Repositories
                     r.ReferenceId == referenceId &&
                     r.ReminderType == type &&
                     r.Status == ReminderStatus.Pending);
+        }
+
+        public async Task<List<Reminder>> GetByGroupIdAsync(Guid groupId, Guid excludeId)
+        {
+            return await _context.Reminders
+                .Where(r => r.ReminderGroupId == groupId && r.Id != excludeId)
+                .ToListAsync();
+        }
+
+        public async Task<List<Reminder>> GetPendingByGroupIdAsync(Guid groupId, Guid excludeId)
+        {
+            return await _context.Reminders
+                .Where(r => r.ReminderGroupId == groupId && r.Id != excludeId && r.Status == ReminderStatus.Pending)
+                .ToListAsync();
         }
 
         public async Task AddAsync(Reminder reminder)

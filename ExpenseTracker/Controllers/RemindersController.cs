@@ -28,7 +28,34 @@ namespace ExpenseTracker.API.Controllers
             if (!result.IsSuccess)
                 return BadRequest(result);
 
-            return CreatedAtAction(nameof(GetById), new { id = result.Data!.Id }, result);
+            return CreatedAtAction(nameof(GetById), new { id = result.Data![0].Id }, result);
+        }
+
+        [HttpPatch("{id:guid}/complete")]
+        public async Task<IActionResult> Complete(Guid id)
+        {
+            var userId = GetCurrentUserId();
+            if (userId is null) return UnauthorizedUser();
+
+            var result = await _reminderService.CompleteAsync(id, userId.Value);
+
+            if (!result.IsSuccess)
+                return NotFound(result);
+
+            return Ok(result);
+        }
+
+        [HttpGet("user/{userId:guid}/active")]
+        public async Task<IActionResult> GetActiveForUser(Guid userId)
+        {
+            var currentUserId = GetCurrentUserId();
+            if (currentUserId is null) return UnauthorizedUser();
+
+            if (userId != currentUserId.Value)
+                return Forbid();
+
+            var result = await _reminderService.GetActiveByUserAsync(userId);
+            return Ok(result);
         }
 
         [HttpPut("{id:guid}")]

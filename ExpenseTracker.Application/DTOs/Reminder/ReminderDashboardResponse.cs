@@ -15,7 +15,5 @@ namespace ExpenseTracker.Application.DTOs.Reminder
         public int UpcomingThisWeekCount { get; set; }
 
         public int CriticalCount { get; set; }
-
-        public int UnreadNotificationsCount { get; set; }
     }
 }

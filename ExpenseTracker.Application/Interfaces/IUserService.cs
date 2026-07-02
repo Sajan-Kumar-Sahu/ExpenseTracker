@@ -13,8 +13,6 @@ namespace ExpenseTracker.Application.Interfaces
 
         Task<Result<UserResponse>> UpdateAsync(Guid id, UpdateUserRequest request);
 
-        Task<Result> UpdateDeviceTokenAsync(Guid userId, string deviceToken);
-
         Task<Result> DeleteAsync(Guid id);
     }
 }

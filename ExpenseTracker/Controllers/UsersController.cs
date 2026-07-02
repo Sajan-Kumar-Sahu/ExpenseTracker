@@ -78,35 +78,6 @@ namespace ExpenseTracker.API.Controllers
             return Ok(result);
         }
 
-        [HttpPut("me/device-token")]
-        public async Task<IActionResult> UpdateDeviceToken([FromBody] UpdateDeviceTokenRequest request)
-        {
-            var userId = GetCurrentUserId();
-            if (userId is null) return UnauthorizedUser();
-
-            var result = await _userService.UpdateDeviceTokenAsync(userId.Value, request.DeviceToken);
-
-            if (!result.IsSuccess)
-                return NotFound(result);
-
-            return NoContent();
-        }
-
-        [HttpPost("me/test-push")]
-        public async Task<IActionResult> TestPush(
-            [FromServices] IPushNotificationService pushService)
-        {
-            var userId = GetCurrentUserId();
-            if (userId is null) return UnauthorizedUser();
-
-            var sent = await pushService.SendToUserAsync(
-                userId.Value,
-                title: "Test Notification",
-                body: "Backend → FCM → Device is working!");
-
-            return Ok(new { sent, userId });
-        }
-
         [HttpDelete("{id:guid}")]
         public async Task<IActionResult> Delete(Guid id)
         {

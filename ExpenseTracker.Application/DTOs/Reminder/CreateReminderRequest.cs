@@ -14,7 +14,9 @@ namespace ExpenseTracker.Application.DTOs.Reminder
 
         public string Message { get; set; } = string.Empty;
 
-        public DateTimeOffset ScheduledDate { get; set; }
+        public DateTimeOffset? ScheduledDate { get; set; }
+
+        public List<DateTimeOffset>? ScheduledDates { get; set; }
 
         public ReminderPriority Priority { get; set; }
 

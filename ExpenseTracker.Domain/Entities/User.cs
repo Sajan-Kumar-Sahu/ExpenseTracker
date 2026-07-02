@@ -22,8 +22,6 @@ namespace ExpenseTracker.Domain.Entities
 
         public DateTime? RefreshTokenExpiry { get; set; }
 
-        public string? DeviceToken { get; set; }
-
         public ICollection<Account> Accounts { get; set; } = new List<Account>();
         public ICollection<Category> Categories { get; set; } = new List<Category>();
         public ICollection<FinancialTransaction> Transactions { get; set; } = new List<FinancialTransaction>();
@@ -32,6 +30,5 @@ namespace ExpenseTracker.Domain.Entities
         public ICollection<Project> Projects { get; set; } = new List<Project>();
         public ICollection<WorkLog> WorkLogs { get; set; } = new List<WorkLog>();
         public ICollection<Reminder> Reminders { get; set; } = new List<Reminder>();
-        public ICollection<Notification> Notifications { get; set; } = new List<Notification>();
     }
 }

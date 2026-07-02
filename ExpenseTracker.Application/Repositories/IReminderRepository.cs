@@ -17,15 +17,15 @@ namespace ExpenseTracker.Application.Repositories
 
         Task<List<Reminder>> GetOverdueByUserIdAsync(Guid userId);
 
-        Task<List<Reminder>> GetDueRemindersAsync();
-
-        Task<List<Reminder>> GetExpiredRemindersAsync();
-
         Task<Reminder?> GetActiveReminderByReferenceAsync(
             Guid userId, ReferenceModule module, Guid referenceId, ReminderType type);
 
         Task<bool> HasActiveReminderAsync(
             Guid userId, ReferenceModule module, Guid referenceId, ReminderType type);
+
+        Task<List<Reminder>> GetByGroupIdAsync(Guid groupId, Guid excludeId);
+
+        Task<List<Reminder>> GetPendingByGroupIdAsync(Guid groupId, Guid excludeId);
 
         Task AddAsync(Reminder reminder);
 

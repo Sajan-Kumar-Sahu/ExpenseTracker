@@ -33,8 +33,6 @@ namespace ExpenseTracker.Persistence.Context
 
         public DbSet<Reminder> Reminders => Set<Reminder>();
 
-        public DbSet<Notification> Notifications => Set<Notification>();
-
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

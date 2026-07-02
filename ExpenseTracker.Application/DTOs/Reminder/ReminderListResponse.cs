@@ -14,6 +14,8 @@ namespace ExpenseTracker.Application.DTOs.Reminder
 
         public Guid ReferenceId { get; set; }
 
+        public Guid? ReminderGroupId { get; set; }
+
         public string Title { get; set; } = string.Empty;
 
         public string Message { get; set; } = string.Empty;

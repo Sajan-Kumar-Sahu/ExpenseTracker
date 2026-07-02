@@ -54,6 +54,7 @@ namespace ExpenseTracker.Persistence.Configurations
             builder.HasIndex(x => x.UserId);
             builder.HasIndex(x => x.Status);
             builder.HasIndex(x => x.ScheduledDate);
+            builder.HasIndex(x => x.ReminderGroupId);
             builder.HasIndex(x => new { x.UserId, x.Status });
             builder.HasIndex(x => new { x.ReferenceModule, x.ReferenceId });
             builder.HasIndex(x => new { x.UserId, x.ReminderType, x.ReferenceModule, x.ReferenceId });

@@ -13,6 +13,8 @@ namespace ExpenseTracker.Domain.Entities
 
         public Guid ReferenceId { get; set; }
 
+        public Guid? ReminderGroupId { get; set; }
+
         public string Title { get; set; } = string.Empty;
 
         public string Message { get; set; } = string.Empty;
@@ -44,7 +46,5 @@ namespace ExpenseTracker.Domain.Entities
         public bool IsActive { get; set; }
 
         public User User { get; set; } = null!;
-
-        public ICollection<Notification> Notifications { get; set; } = new List<Notification>();
     }
 }

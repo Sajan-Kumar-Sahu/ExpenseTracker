@@ -74,21 +74,6 @@ namespace ExpenseTracker.Application.Services
             return Result<UserResponse>.Success(Map(user), "User updated successfully.");
         }
 
-        public async Task<Result> UpdateDeviceTokenAsync(Guid userId, string deviceToken)
-        {
-            var user = await _userRepository.GetByIdAsync(userId);
-
-            if (user is null)
-                return Result.Failure("User not found.");
-
-            user.DeviceToken = deviceToken;
-
-            await _userRepository.UpdateAsync(user);
-            await _unitOfWork.SaveChangesAsync();
-
-            return Result.Success("Device token updated.");
-        }
-
         public async Task<Result> DeleteAsync(Guid id)
         {
             var user = await _userRepository.GetByIdAsync(id);

@@ -5,7 +5,7 @@ namespace ExpenseTracker.Application.Interfaces
 {
     public interface IReminderService
     {
-        Task<Result<ReminderResponse>> CreateAsync(Guid userId, CreateReminderRequest request);
+        Task<Result<List<ReminderResponse>>> CreateAsync(Guid userId, CreateReminderRequest request);
 
         Task<Result<ReminderResponse>> GetByIdAsync(Guid id, Guid userId);
 
@@ -24,5 +24,9 @@ namespace ExpenseTracker.Application.Interfaces
         Task<Result> DeleteAsync(Guid id, Guid userId);
 
         Task<Result<ReminderDashboardResponse>> GetDashboardAsync(Guid userId);
+
+        Task<Result<ReminderResponse>> CompleteAsync(Guid id, Guid userId);
+
+        Task<Result<List<ReminderListResponse>>> GetActiveByUserAsync(Guid userId);
     }
 }
